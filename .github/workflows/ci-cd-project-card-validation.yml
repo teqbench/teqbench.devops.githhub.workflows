@@ -1,4 +1,5 @@
-name: Teq Bench - CI/CD - Validate project card for required (custom) settings/variables.
+name: Common Project Card Validation
+# Teq Bench - CI/CD - Common project card validation for required (custom) settings/variables.
 
 on:
   workflow_call:
