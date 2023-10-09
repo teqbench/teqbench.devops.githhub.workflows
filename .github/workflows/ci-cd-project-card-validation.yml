@@ -1,0 +1,183 @@
+name: Teq Bench - CI/CD - Validate project card for required (custom) settings/variables.
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: The respository to create a release for and, optionally, create a NuGet package for.
+        type: string
+        required: true
+
+      resource_url:
+        type: string
+        description: 'The URL of the issue/PR to get or update'
+        required: true
+        default: 'https://github.com/teq-bench/sandbox-auto-versioning/issues/17'
+
+      project_number:
+        description: The project number the supplied resource URL is associated with to update.
+        type: string
+        required: true
+        default: "2"
+
+env:
+  ORGANIZATION: 'teq-bench'
+  PROJECT_URL: https://github.com/orgs/teq-bench/projects/${{ inputs.project_number }}
+  RESOURCE_URL: ${{ inputs.resource_url }}
+  REPOSITORY: ${{ inputs.repository }}
+  OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED: 'Non-PR - Merging NOT allowed'
+  OPTION_MERGABLE_PR_DO_NOT_MERGE: 'PR - Do NOT merge'
+  OPTION_MERGABLE_PR_ALLOW_MERGE: 'PR - Allow merge'
+  WARNING_LABEL_RELEASE_TYPE_MISSING: 'pull request - release type missing'
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for prior instances of the workflow to finish
+        uses: softprops/turnstyle@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+  variables:
+    needs: init
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Mergable Field Value
+        id: get_mergable_field_value
+        uses: teq-bench/project-fields@v2.1
+        with:
+          operation: get
+          fields: Mergable
+          github_token: ${{ secrets.DEVOPS_PROJECT_READER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          
+      - name: Get Release Type Field Value
+        id: get_release_type_field_value
+        uses: teq-bench/project-fields@v2.1
+        with:
+          operation: get
+          fields: Release Type
+          github_token: ${{ secrets.DEVOPS_PROJECT_READER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          
+      - name: Assign Field Values To Variables
+        id: assign_field_values_to_variables
+        run: |
+          echo "mergable_value=${{ steps.get_mergable_field_value.outputs.values }}" >> $GITHUB_OUTPUT
+          echo "release_type_value=${{ steps.get_release_type_field_value.outputs.values }}" >> $GITHUB_OUTPUT
+          
+    outputs:
+      MERGABLE: ${{ steps.assign_field_values_to_variables.outputs.mergable_value }}
+      RELEASE_TYPE: ${{ steps.assign_field_values_to_variables.outputs.release_type_value }}
+        
+  update_project_card_non_pull_request:
+    needs: variables
+    if: (github.event_name != 'pull_request')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Mergable field if NOT a PR and Mergable is NOT assigned '${{ env.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}'
+        id: update_mergable_case_1
+        if: ${{ needs.variables.outputs.MERGABLE != env.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
+        uses: teq-bench/project-fields@v2.1
+        with:
+          operation: set
+          fields: Mergable
+          github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          values: 'Non-PR - Merging NOT allowed'
+      - name: Clear Release Type field if NOT a PR and Release Type has been assigned to previously
+        id: update_release_case_1
+        if: ${{ needs.variables.outputs.RELEASE_TYPE != '' }}
+        uses: teq-bench/project-fields@v2.1
+        with:
+          operation: clear
+          fields: Release Type
+          github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+
+  update_project_card_pull_request:
+    needs: variables
+    if: (github.event_name == 'pull_request')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Mergable field if PR and Mergable is not assigned
+        id: update_mergable_case_1
+        if: ${{ needs.variables.outputs.MERGABLE == '' }}
+        uses: teq-bench/project-fields@v2.1
+        with:
+          operation: set
+          fields: Mergable
+          github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          values: ${{ env.OPTION_MERGABLE_PR_DO_NOT_MERGE }}
+          
+      - name: Update Mergable field if PR and Mergable is incorrectly assigned '${{ env.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}'
+        id: update_mergable_case_2
+        if: ${{ needs.variables.outputs.MERGABLE == env.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
+        uses: teq-bench/project-fields@v2.1
+        with:
+          operation: set
+          fields: Mergable
+          github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          values: ${{ env.OPTION_MERGABLE_PR_DO_NOT_MERGE }}
+          
+      # - name: Assign warning label if PR and Release Type is missing
+      #   id: assign_warning_label
+      #   if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
+      #   uses: actions/github-script@v6
+      #   with:
+      #     script: |
+      #       github.rest.issues.addLabels({
+      #         issue_number: context.issue.number,
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         labels: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
+      #       })
+
+      # - name: Remove warning label if PR and Release Type is NOT missing
+      #   id: remove_warning_label
+      #   if: ${{ (needs.variables.outputs.RELEASE_TYPE != '') && contains(github.event.*.labels.*.name, env.WARNING_LABEL_RELEASE_TYPE_MISSING) }}
+      #   uses: actions/github-script@v6
+      #   with:
+      #     script: |
+      #       github.rest.issues.removeLabel({
+      #         issue_number: context.issue.number,
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         name: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
+      #       })            
+
+  verify_pull_request_can_proceed:
+    # Use this job name in conjunction with branch protection requiring status checks to prevent merging
+    # see https://calmcode.io/github-actions/prevent-merge.html
+    needs: [variables, update_project_card_pull_request]
+    if: (github.event_name == 'pull_request')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Mergable Field Value
+        # This field value can change in the update_project_card_pull_request job. So, get it again to have the latest value.
+        id: get_mergable_field_value
+        uses: teq-bench/project-fields@v2.1
+        with:
+          operation: get
+          fields: Mergable
+          github_token: ${{ secrets.DEVOPS_PROJECT_READER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+
+      - name: Is merging allowed for this pull request?
+        if: ${{ steps.get_mergable_field_value.outputs.values != env.OPTION_MERGABLE_PR_ALLOW_MERGE }}
+        run: |
+          echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ env.OPTION_MERGABLE_PR_ALLOW_MERGE }}' to proceed."
+          echo "Exiting workflow."
+          exit 1
+
+      - name: Is release type set for this pull request?
+        if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
+        run: |
+          echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned in order to proceed."
+          echo "Exiting workflow."
+          exit 1
+          
+      
