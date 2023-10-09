@@ -12,13 +12,11 @@ on:
         type: string
         description: 'The URL of the issue/PR to get or update'
         required: true
-        default: 'https://github.com/teq-bench/sandbox-auto-versioning/issues/17'
 
       project_number:
-        description: The project number the supplied resource URL is associated with to update.
+        description: The project number the supplied resource URL is associated with to validate.
         type: string
         required: true
-        default: "2"
 
 env:
   ORGANIZATION: 'teq-bench'
