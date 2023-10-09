@@ -34,7 +34,7 @@ env:
   ORGANIZATION: 'teq-bench'
   PROJECT_URL: https://github.com/orgs/teq-bench/projects/${{ inputs.project_number }}
   RESOURCE_URL: ${{ inputs.resource_url }}
-  REPOSITORY: ${{ github.event.ref }}
+  REPOSITORY: ${{ inputs.repository }}
   CREATE_NUGET_PACKAGE: ${{ inputs.create-nuget-package }}
   
 jobs:
@@ -182,7 +182,7 @@ jobs:
       BUILD_CONFIG: 'Release'
       # This environment variable is implicitly required by the Setup .NET step
       NUGET_AUTH_TOKEN: ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
-    if: ${{ inputs.create-nuget-package == true }}
+    if: ${{ env.CREATE_NUGET_PACKAGE == true }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
