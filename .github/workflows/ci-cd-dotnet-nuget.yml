@@ -27,15 +27,15 @@ on:
         default: false
         
 env:
-  VERSION_FILE: "version.json"
-  CI_TAG_MESSAGE: "GitHub Release Build Artifacts"
-  GIT_CONFIG_AUTHOR: "Teq Bench - Trading Toolbox"
-  GIT_CONFIG_EMAIL: "teq-bench@noreply.github.com"
   ORGANIZATION: 'teq-bench'
+  REPOSITORY: ${{ inputs.repository }}
   PROJECT_URL: https://github.com/orgs/teq-bench/projects/${{ inputs.project_number }}
   RESOURCE_URL: ${{ inputs.resource_url }}
-  REPOSITORY: ${{ inputs.repository }}
   CREATE_NUGET_PACKAGE: ${{ inputs.create-nuget-package }}
+  VERSION_FILE: "version.json"
+  CI_TAG_MESSAGE: "Teq Bench - GitHub Build Artifacts"
+  GIT_CONFIG_AUTHOR: "Teq Bench"
+  GIT_CONFIG_EMAIL: "teq-bench@noreply.github.com"
   
 jobs:
   init:
@@ -46,20 +46,24 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # merge_check:
-  #   needs: init
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Is pull request closed and merged?
-  #       if: github.event.pull_request.merged != true
-  #       run: |
-  #         echo "Pull request has been closed, but not merged."
-  #         echo "This CI/CD workflow requires the pull request be merged in order to proceed."
-  #         echo "Exiting workflow."
-  #         # exit 1
+  merge_check:
+    needs: init
+    runs-on: ubuntu-latest
+    steps:
+      - name: Is pull request closed and merged?
+        if: github.event.pull_request.merged != true
+        run: |
+          echo "Pull request has been closed, but not merged."
+          echo "This CI/CD workflow requires the pull request be merged in order to proceed."
+          echo "Exiting workflow."
+          exit 1
 
   variables:
+    needs: merge_check
     runs-on: ubuntu-latest
+    # env:
+    #   PROJECT_URL: https://github.com/orgs/teq-bench/projects/${{ inputs.project_number }}
+    #   RESOURCE_URL: ${{ inputs.resource_url }}
     steps:
       - name: Get Mergable Field Value
         id: get_mergable_field_value
@@ -91,16 +95,16 @@ jobs:
       MERGABLE: ${{ steps.assign_mergable_field_value.outputs.mergable_value }}
       RELEASE_TYPE: ${{ steps.assign_release_type_field_value.outputs.release_type_value }}
 
-  debug-variables:
-    runs-on: ubuntu-latest
-    needs: variables
-    steps:
-      - name: output variables
-        run: | 
-          echo "REPOSITORY = " ${{ env.REPOSITORY }}
-          echo "CREATE_NUGET_PACKAGE = " ${{ env.CREATE_NUGET_PACKAGE }}
-          echo "needs.variables.outputs.MERGABLE = " ${{ needs.variables.outputs.MERGABLE }}
-          echo "needs.variables.outputs.RELEASE_TYPE = " ${{ needs.variables.outputs.RELEASE_TYPE }}
+  # debug-variables:
+  #   runs-on: ubuntu-latest
+  #   needs: variables
+  #   steps:
+  #     - name: output variables
+  #       run: | 
+  #         echo "REPOSITORY = " ${{ inputs.repository }}
+  #         echo "CREATE_NUGET_PACKAGE = " ${{ inputs.create-nuget-package }}
+  #         echo "needs.variables.outputs.MERGABLE = " ${{ needs.variables.outputs.MERGABLE }}
+  #         echo "needs.variables.outputs.RELEASE_TYPE = " ${{ needs.variables.outputs.RELEASE_TYPE }}
           
   create-release:
     runs-on: ubuntu-latest
