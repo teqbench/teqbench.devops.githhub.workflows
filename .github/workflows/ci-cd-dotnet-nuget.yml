@@ -93,23 +93,22 @@ jobs:
       MERGABLE: ${{ steps.assign_field_values_to_variables.outputs.mergable_value }}
       RELEASE_TYPE: ${{ steps.assign_field_values_to_variables.outputs.release_type_value }}
 
-  debug:
-    runs-on: ubuntu-latest
-    needs: variables
-    steps:
-      - name: output
-        run: |
-          echo "needs.variables.outputs.RELEASE_TYPE = " ${{ needs.variables.outputs.RELEASE_TYPE }}
-          echo "contains(needs.variables.outputs.RELEASE_TYPE, 'Major') = " ${{ contains(needs.variables.outputs.RELEASE_TYPE, 'Major') }}
-          echo "(needs.variables.outputs.RELEASE_TYPE == 'Major') = " ${{ (needs.variables.outputs.RELEASE_TYPE == 'Major') }}
-          echo "(needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Minor') = " ${{ (needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Major') }}
-          echo "(needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Minor')  || (needs.variables.outputs.RELEASE_TYPE == 'Patch') = " ${{ (needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Patch') }}
+  # debug:
+  #   runs-on: ubuntu-latest
+  #   needs: variables
+  #   steps:
+  #     - name: output
+  #       run: |
+  #         echo "needs.variables.outputs.RELEASE_TYPE = " ${{ needs.variables.outputs.RELEASE_TYPE }}
+  #         echo "contains(needs.variables.outputs.RELEASE_TYPE, 'Major') = " ${{ contains(needs.variables.outputs.RELEASE_TYPE, 'Major') }}
+  #         echo "(needs.variables.outputs.RELEASE_TYPE == 'Major') = " ${{ (needs.variables.outputs.RELEASE_TYPE == 'Major') }}
+  #         echo "(needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Minor') = " ${{ (needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Major') }}
+  #         echo "(needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Minor')  || (needs.variables.outputs.RELEASE_TYPE == 'Patch') = " ${{ (needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Patch') }}
           
   create-release:
     runs-on: ubuntu-latest
     needs: variables
     # Although could just check fot see if RELEASE_TYPE is an empty string, be explicit with the valid values it can be in order to proceed.
-    # if: ${{ contains(needs.variables.outputs.RELEASE_TYPE, 'Major') || contains(needs.variables.outputs.RELEASE_TYPE, 'Minor') || contains(needs.variables.outputs.RELEASE_TYPE, 'Patch') }}
     if: ${{ (needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Minor') || (needs.variables.outputs.RELEASE_TYPE == 'Patch') }}
     steps:
       - name: Checkout Repository
