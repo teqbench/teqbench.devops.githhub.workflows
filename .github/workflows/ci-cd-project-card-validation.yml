@@ -184,19 +184,24 @@ jobs:
           echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned in order to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
 
+      - name: debug passed
+        run: |
+          echo "steps.is_merging_allowed.outputs.passed = " ${{ steps.is_merging_allowed.outputs.passed }}
+          echo "steps.is_release_type_set.outputs.passed = " ${{ steps.is_release_type_set.outputs.passed }}
+          
     outputs:
-      success: ${{ (steps.is_merging_allowed.outputs.passed != 'false') && (steps.is_release_type_set.outputs.passed != 'false') }}
+      passed: ${{ (steps.is_merging_allowed.outputs.passed != 'false') && (steps.is_release_type_set.outputs.passed != 'false') }}
 
   verification_status:
     needs: verification
     runs-on: ubuntu-latest
     steps:
       - name: Log success
-        if: ${{ needs.verification.outputs.success }}
+        if: ${{ needs.verification.outputs.passed }}
         run: |
           echo "Project card validation SUCCESSFUL."
 
       - name: Log failure
-        if: ${{ !needs.verification.outputs.success }}
+        if: ${{ !needs.verification.outputs.passed }}
         run: |
           echo "Project card validation FAILED."
