@@ -170,7 +170,7 @@ jobs:
         if: ${{ steps.get_mergable_field_value.outputs.values != env.OPTION_MERGABLE_PR_ALLOW_MERGE }}
         run: |
           echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ env.OPTION_MERGABLE_PR_ALLOW_MERGE }}' to proceed."
-          echo "is_merging_allowed=true" >> $GITHUB_OUTPUT
+          echo "success=false" >> $GITHUB_OUTPUT
           # exit 1
 
       - name: Is release type set for this pull request?
@@ -178,12 +178,31 @@ jobs:
         if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
         run: |
           echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned in order to proceed."
-          echo "is_release_type_set=true" >> $GITHUB_OUTPUT       
+          echo "success=false" >> $GITHUB_OUTPUT       
           # exit 1
 
-    outputs:
-      success: ${{ steps.is_merging_allowed.outputs.success && steps.is_release_type_set.outputs.success }}
-      
+      - name: Return exit failure
+        if: ${{ (steps.is_merging_allowed.outputs.success == "false") || (steps.is_release_type_set.outputs.success == "false") }}
+        run: |
+          echo "Project card validation FAILED."
+          exit 1
+
+      - name: Return exit success
+        if: ${{ (steps.is_merging_allowed.outputs.success != "false") && (steps.is_release_type_set.outputs.success != "false") }}
+        run: |
+          echo "Project card validation SUCCESSFUL."
+          exit 0
+
+  # verify_pull_request_can_proceed:
+  #   needs: [verify]
+  #   runs-on: ubuntu-latest
+  #   if: success()
+  #   steps:
+  #     - name: 
+  #   outputs:
+  #     success: ${{ !steps.is_merging_allowed.outputs.success && !steps.is_release_type_set.outputs.success }}
+
+  
       # - name: Return status
       #   run: |
       #     if (always() && failure()); then
@@ -194,21 +213,21 @@ jobs:
       #       exit 0          
       #     fi
       
-  pull_request_can_proceed_status_check:
-    # Use this job name in conjunction with branch protection requiring status checks to prevent merging
-    # see https://calmcode.io/github-actions/prevent-merge.html
-    needs: [verify_pull_request_can_proceed]
-    if: always() # always run, so we never skip the status check
-    runs-on: ubuntu-latest
-    steps:
-      # pass step only when output of previous verify_pull_request_can_proceed job is set
-      - run: |
-          passed="${{ needs.verify_pull_request_can_proceed.outputs.success }}"
-          if [[ $passed == "true" ]]; then
-            echo "Project card validation SUCCESSFUL."
-            exit 0
-          else
-            echo "Project card validation FAILED."
-            exit 1
-          fi
+  # pull_request_can_proceed_status_check:
+  #   # Use this job name in conjunction with branch protection requiring status checks to prevent merging
+  #   # see https://calmcode.io/github-actions/prevent-merge.html
+  #   needs: [verify_pull_request_can_proceed]
+  #   if: always() # always run, so we never skip the status check
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # pass step only when output of previous verify_pull_request_can_proceed job is set
+  #     - run: |
+  #         passed="${{ needs.verify_pull_request_can_proceed.outputs.success }}"
+  #         if [[ $passed == "true" ]]; then
+  #           echo "Project card validation SUCCESSFUL."
+  #           exit 0
+  #         else
+  #           echo "Project card validation FAILED."
+  #           exit 1
+  #         fi
     
