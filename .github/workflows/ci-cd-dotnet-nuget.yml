@@ -1,4 +1,4 @@
-name: Common Create/Deploy NuGet Package
+name: Common Create and Deploy NuGet Package
 # Teq Bench - CI/CD - Common workflow to create a NuGet package and (optionally) deploy to the organization's package registry on GitHub.
 
 on: 
