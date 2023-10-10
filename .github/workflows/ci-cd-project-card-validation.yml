@@ -139,31 +139,31 @@ jobs:
           project_url: ${{ env.PROJECT_URL }}
           values: ${{ env.OPTION_MERGABLE_PR_DO_NOT_MERGE }}
           
-      - name: Assign warning label if PR and Release Type is missing
-        id: assign_warning_label
-        if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              issue_number: ${{ env.EVENT_NUMBER }},
-              owner: "${{ env.REPOSITORY_OWNER }}",
-              repo: "${{ env.REPOSITORY }}",
-              labels: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
-            })
+      # - name: Assign warning label if PR and Release Type is missing
+      #   id: assign_warning_label
+      #   if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
+      #   uses: actions/github-script@v6
+      #   with:
+      #     script: |
+      #       github.rest.issues.addLabels({
+      #         issue_number: ${{ env.EVENT_NUMBER }},
+      #         owner: "${{ env.REPOSITORY_OWNER }}",
+      #         repo: "${{ env.REPOSITORY }}",
+      #         labels: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
+      #       })
 
-      - name: Remove warning label if PR and Release Type is NOT missing
-        id: remove_warning_label
-        if: ${{ (needs.variables.outputs.RELEASE_TYPE != '') && contains(github.event.*.labels.*.name, env.WARNING_LABEL_RELEASE_TYPE_MISSING) }}
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.removeLabel({
-              issue_number: ${{ env.EVENT_NUMBER }},
-              owner: "${{ env.REPOSITORY_OWNER }}",
-              repo: "${{ env.REPOSITORY }}",
-              name: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
-            })            
+      # - name: Remove warning label if PR and Release Type is NOT missing
+      #   id: remove_warning_label
+      #   if: ${{ (needs.variables.outputs.RELEASE_TYPE != '') && contains(github.event.*.labels.*.name, env.WARNING_LABEL_RELEASE_TYPE_MISSING) }}
+      #   uses: actions/github-script@v6
+      #   with:
+      #     script: |
+      #       github.rest.issues.removeLabel({
+      #         issue_number: ${{ env.EVENT_NUMBER }},
+      #         owner: "${{ env.REPOSITORY_OWNER }}",
+      #         repo: "${{ env.REPOSITORY }}",
+      #         name: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
+      #       })            
 
   validation:
     # Use this job name in conjunction with branch protection requiring status checks to prevent merging
