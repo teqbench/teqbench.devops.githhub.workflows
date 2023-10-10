@@ -235,7 +235,7 @@ jobs:
               issue_number: ${{ env.EVENT_NUMBER }},
               owner: "${{ env.REPOSITORY_OWNER }}",
               repo: "${{ env.REPOSITORY_NAME }}",
-              labels: ["Published-NuGet-${{ steps.get-version-number-components.outputs.tag }}"]
+              labels: ["Published-NuGet-${{ needs.create-release.outputs.TAG }}"]
             })
             
   cleanup:
