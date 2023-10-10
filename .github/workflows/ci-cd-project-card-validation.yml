@@ -147,8 +147,8 @@ jobs:
           script: |
             github.rest.issues.addLabels({
               issue_number: ${{ env.EVENT_NUMBER }},
-              owner: ${{ env.REPOSITORY_OWNER }},
-              repo: ${{ env.REPOSITORY }},
+              owner: "${{ env.REPOSITORY_OWNER }}",
+              repo: "${{ env.REPOSITORY }}",
               labels: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
             })
 
@@ -160,8 +160,8 @@ jobs:
           script: |
             github.rest.issues.removeLabel({
               issue_number: ${{ env.EVENT_NUMBER }},
-              owner: ${{ env.REPOSITORY_OWNER }},
-              repo: ${{ env.REPOSITORY }},
+              owner: "${{ env.REPOSITORY_OWNER }}",
+              repo: "${{ env.REPOSITORY }}",
               name: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
             })            
 
