@@ -51,7 +51,12 @@ env:
   OPTION_MERGABLE_PR_DO_NOT_MERGE: 'PR - Do NOT merge'
   OPTION_MERGABLE_PR_ALLOW_MERGE: 'PR - Allow merge'
   WARNING_LABEL_RELEASE_TYPE_MISSING: 'pull request - release type missing'
-
+  OPTION_STATUS_TODO: 'Todo'
+  OPTION_STATUS_IN_PROGRESS: 'In Progress'
+  OPTION_STATUS_ON_HOLD: 'On Hold'
+  OPTION_STATUS_PR_FAILURE: 'PR Failure'
+  OPTION_STATUS_DONE: 'Done'
+  
 jobs:
   init:
     runs-on: ubuntu-latest
@@ -107,7 +112,8 @@ jobs:
           fields: Mergable
           github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
           project_url: ${{ env.PROJECT_URL }}
-          values: 'Non-PR - Merging NOT allowed'
+          values: ${{ env.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
+          
       - name: Clear Release Type field if NOT a PR and Release Type has been assigned to previously
         id: update_release_case_1
         if: ${{ needs.variables.outputs.RELEASE_TYPE != '' }}
@@ -201,17 +207,47 @@ jobs:
         run: |
           echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned in order to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
-
-      # - name: debug passed
-      #   run: |
-      #     echo "steps.is_merging_allowed.outputs.passed = " ${{ steps.is_merging_allowed.outputs.passed }}
-      #     echo "steps.is_release_type_set.outputs.passed = " ${{ steps.is_release_type_set.outputs.passed }}
           
     outputs:
       passed: ${{ (steps.is_merging_allowed.outputs.passed != 'false') && (steps.is_release_type_set.outputs.passed != 'false') }}
 
-  validation_status:
+  validation_update_project_card:
     needs: validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update non-pull request card - failure
+        if: ${{ (github.event_name != 'pull_request') && (needs.validation.outputs.passed == 'false') }}
+        uses: teqbench/project-fields@v2.1
+        with:
+          operation: set
+          fields: Status
+          github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          values: ${{ env.OPTION_STATUS_ON_HOLD }}
+          
+      - name: Update non-pull request card - success
+        if: ${{ (github.event_name != 'pull_request') && (needs.validation.outputs.passed == 'true') }}
+        uses: teqbench/project-fields@v2.1
+        with:
+          operation: set
+          fields: Status
+          github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          values: ${{ env.OPTION_STATUS_IN_PROGRESS }}
+
+      - name: Update pull request card - failure
+        # Success status update for project card depends on the result of the ci-cd-dotnet-nuget workflow. Update there.
+        if: ${{ (github.event_name == 'pull_request') && (needs.validation.outputs.passed == 'false') }}
+        uses: teqbench/project-fields@v2.1
+        with:
+          operation: set
+          fields: Status
+          github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          values: ${{ env.OPTION_STATUS_PR_FAILURE }}
+          
+  validation_status:
+    needs: [validation, validation_update_project_card]
     runs-on: ubuntu-latest
     steps:
       - name: Validation successful
