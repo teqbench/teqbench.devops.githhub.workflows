@@ -170,7 +170,7 @@ jobs:
         if: ${{ steps.get_mergable_field_value.outputs.values != env.OPTION_MERGABLE_PR_ALLOW_MERGE }}
         run: |
           echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ env.OPTION_MERGABLE_PR_ALLOW_MERGE }}' to proceed."
-          echo "success=false" >> $GITHUB_OUTPUT
+          echo "success='false'" >> $GITHUB_OUTPUT
           # exit 1
 
       - name: Is release type set for this pull request?
@@ -178,17 +178,17 @@ jobs:
         if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
         run: |
           echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned in order to proceed."
-          echo "success=false" >> $GITHUB_OUTPUT       
+          echo "success='false'" >> $GITHUB_OUTPUT       
           # exit 1
 
       - name: Return exit failure
-        if: ${{ (steps.is_merging_allowed.outputs.success == "false") || (steps.is_release_type_set.outputs.success == "false") }}
+        if: ${{ (steps.is_merging_allowed.outputs.success == 'false') || (steps.is_release_type_set.outputs.success == 'false') }}
         run: |
           echo "Project card validation FAILED."
           exit 1
 
       - name: Return exit success
-        if: ${{ (steps.is_merging_allowed.outputs.success != "false") && (steps.is_release_type_set.outputs.success != "false") }}
+        if: ${{ (steps.is_merging_allowed.outputs.success != 'false') && (steps.is_release_type_set.outputs.success != 'false') }}
         run: |
           echo "Project card validation SUCCESSFUL."
           exit 0
