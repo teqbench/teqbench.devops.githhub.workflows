@@ -197,11 +197,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Log success
-        if: ${{ needs.verification.outputs.passed }}
+        if: ${{ needs.verification.outputs.passed == 'true' }}
         run: |
           echo "Project card validation SUCCESSFUL."
 
       - name: Log failure
-        if: ${{ !needs.verification.outputs.passed }}
+        if: ${{ !needs.verification.outputs.passed == 'false' }}
         run: |
           echo "Project card validation FAILED."
