@@ -25,15 +25,15 @@ on:
         required: true
         
 env:
-  ORGANIZATION: 'teq-bench'
+  ORGANIZATION: 'teqbench'
   REPOSITORY: ${{ inputs.repository }}
-  PROJECT_URL: https://github.com/orgs/teq-bench/projects/${{ inputs.project_number }}
+  PROJECT_URL: https://github.com/orgs/teqbench/projects/${{ inputs.project_number }}
   RESOURCE_URL: ${{ inputs.resource_url }}
   CREATE_NUGET_PACKAGE: ${{ inputs.create-nuget-package }}
   VERSION_FILE: "version.json"
   CI_TAG_MESSAGE: "Teq Bench - GitHub Build Artifacts"
   GIT_CONFIG_AUTHOR: "Teq Bench"
-  GIT_CONFIG_EMAIL: "teq-bench@noreply.github.com"
+  GIT_CONFIG_EMAIL: "teqbench@noreply.github.com"
   
 jobs:
   init:
@@ -62,7 +62,7 @@ jobs:
     steps:
       - name: Get Mergable Field Value
         id: get_mergable_field_value
-        uses: teq-bench/project-fields@v2.1
+        uses: teqbench/project-fields@v2.1
         with:
           operation: get
           fields: Mergable
@@ -72,7 +72,7 @@ jobs:
           
       - name: Get Release Type Field Value
         id: get_release_type_field_value
-        uses: teq-bench/project-fields@v2.1
+        uses: teqbench/project-fields@v2.1
         with:
           operation: get
           fields: Release Type
@@ -106,7 +106,7 @@ jobs:
       # - name: Checkout Actions
       #   uses: actions/checkout@v4
       #   with:
-      #     repository: teq-bench/version-number-components-action
+      #     repository: teqbench/version-number-components-action
       #     ref: v12
       #     path: ./.github/actions/version-number-components-action
       #     token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
@@ -122,7 +122,7 @@ jobs:
       - name: Get Current Version Number Components
         id: get-version-number-components
         # uses: ./.github/actions/version-number-components-action
-        uses: teq-bench/version-number-components-action@v12
+        uses: teqbench/version-number-components-action@v12
         with:
           release-type: ${{ needs.variables.outputs.RELEASE_TYPE }}
           version-json: ${{ steps.read-version-file.outputs.version-json }}
