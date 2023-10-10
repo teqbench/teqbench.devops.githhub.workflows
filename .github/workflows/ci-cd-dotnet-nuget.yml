@@ -9,11 +9,26 @@ on:
         type: string
         required: true
 
+      repository_owner:
+        description: The respository's owner, i.e. teqbench.
+        type: string
+        required: true
+
+      repository_name:
+        description: The respository's name without owner, i.e. ci-cd-workflows.
+        type: string
+        required: true
+
       resource_url:
         type: string
         description: 'The URL of the issue/PR to get or update'
         required: true
 
+      event_number:
+        description: The issue/pr number the supplied resource URL is associated with to validate.
+        type: string
+        required: true
+        
       project_number:
         description: The project number the supplied resource URL is associated with to update.
         type: string
@@ -26,9 +41,12 @@ on:
         
 env:
   ORGANIZATION: 'teqbench'
-  REPOSITORY: ${{ inputs.repository }}
   PROJECT_URL: https://github.com/orgs/teqbench/projects/${{ inputs.project_number }}
+  EVENT_NUMBER: ${{ inputs.event_number }}
   RESOURCE_URL: ${{ inputs.resource_url }}
+  REPOSITORY: ${{ inputs.repository }}
+  REPOSITORY_OWNER: ${{ inputs.repository_owner }}
+  REPOSITORY_NAME: ${{ inputs.repository_name }}  
   CREATE_NUGET_PACKAGE: ${{ inputs.create-nuget-package }}
   VERSION_FILE: "version.json"
   CI_TAG_MESSAGE: "Teq Bench - GitHub Build Artifacts"
@@ -149,6 +167,18 @@ jobs:
         run: gh release create ${{ steps.get-version-number-components.outputs.tag }} --generate-notes --repo ${{ env.REPOSITORY }}
         env:
           GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
+
+      - name: Assign release label
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ env.EVENT_NUMBER }},
+              owner: "${{ env.REPOSITORY_OWNER }}",
+              repo: "${{ env.REPOSITORY_NAME }}",
+              labels: ["Release-${{ steps.get-version-number-components.outputs.tag }}"]
+            })
+            
     outputs:
       MAJOR: ${{ steps.get-version-number-components.outputs.major }}
       MINOR: ${{ steps.get-version-number-components.outputs.minor }}
@@ -196,7 +226,18 @@ jobs:
         # however, publishing appears to only work when the owner of the supplied town is also assigned the 'owner' role
         # within the GitHub organzation which own's the repo being packaged/published.
         run: dotnet nuget push bin/Release/*.nupkg --skip-duplicate --api-key ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
-      
+
+      - name: Assign publish label
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ env.EVENT_NUMBER }},
+              owner: "${{ env.REPOSITORY_OWNER }}",
+              repo: "${{ env.REPOSITORY_NAME }}",
+              labels: ["Published-NuGet-${{ steps.get-version-number-components.outputs.tag }}"]
+            })
+            
   cleanup:
     runs-on: ubuntu-latest
     if: always()
@@ -211,6 +252,7 @@ jobs:
           github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
           project_url: ${{ env.PROJECT_URL }}
           values: ${{ env.OPTION_STATUS_DONE }}
+          
       - name: Update Status field for pull request
         if: failure()
         uses: teqbench/project-fields@v2.1
