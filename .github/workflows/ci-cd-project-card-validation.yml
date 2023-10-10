@@ -10,7 +10,12 @@ on:
         required: true
 
       repository_owner:
-        description: The respository's owner username, i.e. teq-bench.
+        description: The respository's owner, i.e. teq-bench.
+        type: string
+        required: true
+
+      repository_name:
+        description: The respository's name without owner, i.e. ci-cd-workflows.
         type: string
         required: true
 
