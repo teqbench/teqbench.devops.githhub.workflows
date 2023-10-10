@@ -153,7 +153,7 @@ jobs:
       #         name: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
       #       })            
 
-  verification:
+  validation:
     # Use this job name in conjunction with branch protection requiring status checks to prevent merging
     # see https://calmcode.io/github-actions/prevent-merge.html
     needs: [variables, update_project_card_pull_request]
@@ -192,18 +192,18 @@ jobs:
     outputs:
       passed: ${{ (steps.is_merging_allowed.outputs.passed != 'false') && (steps.is_release_type_set.outputs.passed != 'false') }}
 
-  verification_status:
-    needs: verification
+  validation_status:
+    needs: validation
     runs-on: ubuntu-latest
     steps:
-      - name: Verification successful
-        if: ${{ needs.verification.outputs.passed == 'true' }}
+      - name: Validation successful
+        if: ${{ needs.validation.outputs.passed == 'true' }}
         run: |
           echo "Project card validation SUCCESSFUL."
           exit 0
           
-      - name: Verification failed
-        if: ${{ needs.verification.outputs.passed == 'false' }}
+      - name: Validation failed
+        if: ${{ needs.validation.outputs.passed == 'false' }}
         run: |
           echo "Project card validation FAILED."
           exit 1
