@@ -21,7 +21,7 @@ on:
 
     # Map the workflow outputs to job outputs
     outputs:
-      workflow_success:
+      success:
         description: "Workflow verification; true if all verification passed, otherwise false."
         value: ${{ jobs.verification.outputs.success }}
 env:
