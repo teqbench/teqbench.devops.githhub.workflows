@@ -175,17 +175,17 @@ jobs:
         if: ${{ steps.get_mergable_field_value.outputs.values != env.OPTION_MERGABLE_PR_ALLOW_MERGE }}
         run: |
           echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ env.OPTION_MERGABLE_PR_ALLOW_MERGE }}' to proceed."
-          echo "success='false'" >> $GITHUB_OUTPUT
+          echo "passed=false" >> $GITHUB_OUTPUT
 
       - name: Is release type set for this pull request?
         id: is_release_type_set
         if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
         run: |
           echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned in order to proceed."
-          echo "success='false'" >> $GITHUB_OUTPUT
+          echo "passed=false" >> $GITHUB_OUTPUT
 
     outputs:
-      success: ${{ (steps.is_merging_allowed.outputs.success != 'false') && (steps.is_release_type_set.outputs.success != 'false') }}
+      success: ${{ (steps.is_merging_allowed.outputs.passed != 'false') && (steps.is_release_type_set.outputs.passed != 'false') }}
 
   verification_status:
     needs: verification
