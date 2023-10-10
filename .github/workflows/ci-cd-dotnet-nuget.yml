@@ -103,13 +103,13 @@ jobs:
           ref: main
           token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
-      - name: Checkout Actions
-        uses: actions/checkout@v4
-        with:
-          repository: teq-bench/version-number-components-action
-          ref: v12
-          path: ./.github/actions/version-number-components-action
-          token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
+      # - name: Checkout Actions
+      #   uses: actions/checkout@v4
+      #   with:
+      #     repository: teq-bench/version-number-components-action
+      #     ref: v12
+      #     path: ./.github/actions/version-number-components-action
+      #     token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
        
       - name: Read Version File
         id: read-version-file
@@ -121,7 +121,8 @@ jobs:
 
       - name: Get Current Version Number Components
         id: get-version-number-components
-        uses: ./.github/actions/version-number-components-action
+        # uses: ./.github/actions/version-number-components-action
+        uses: teq-bench/version-number-components-action@v12
         with:
           release-type: ${{ needs.variables.outputs.RELEASE_TYPE }}
           version-json: ${{ steps.read-version-file.outputs.version-json }}
