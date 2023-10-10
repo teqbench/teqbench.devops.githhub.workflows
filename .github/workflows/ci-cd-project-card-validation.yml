@@ -5,13 +5,23 @@ on:
   workflow_call:
     inputs:
       repository:
-        description: The respository to create a release for and, optionally, create a NuGet package for.
+        description: The respository's owner and repository name, i.e. teq-bench/ci-cd-workflows, to create a release for and, optionally, create a NuGet package for.
+        type: string
+        required: true
+
+      repository_owner:
+        description: The respository's owner username, i.e. teq-bench.
         type: string
         required: true
 
       resource_url:
         type: string
         description: 'The URL of the issue/PR to get or update'
+        required: true
+
+      event_number:
+        description: The issue/pr number the supplied resource URL is associated with to validate.
+        type: string
         required: true
 
       project_number:
@@ -27,8 +37,10 @@ on:
 env:
   ORGANIZATION: 'teq-bench'
   PROJECT_URL: https://github.com/orgs/teq-bench/projects/${{ inputs.project_number }}
+  EVENT_NUMBER: ${{ inputs.event_number }}
   RESOURCE_URL: ${{ inputs.resource_url }}
   REPOSITORY: ${{ inputs.repository }}
+  REPOSITORY_OWNER: ${{ inputs.repository_owner }}
   OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED: 'Non-PR - Merging NOT allowed'
   OPTION_MERGABLE_PR_DO_NOT_MERGE: 'PR - Do NOT merge'
   OPTION_MERGABLE_PR_ALLOW_MERGE: 'PR - Allow merge'
@@ -127,31 +139,31 @@ jobs:
           project_url: ${{ env.PROJECT_URL }}
           values: ${{ env.OPTION_MERGABLE_PR_DO_NOT_MERGE }}
           
-      # - name: Assign warning label if PR and Release Type is missing
-      #   id: assign_warning_label
-      #   if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
-      #   uses: actions/github-script@v6
-      #   with:
-      #     script: |
-      #       github.rest.issues.addLabels({
-      #         issue_number: context.issue.number,
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         labels: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
-      #       })
+      - name: Assign warning label if PR and Release Type is missing
+        id: assign_warning_label
+        if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ env.EVENT_NUMBER }},
+              owner: ${{ env.REPOSITORY_OWNER }},
+              repo: ${{ env.REPOSITORY }},
+              labels: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
+            })
 
-      # - name: Remove warning label if PR and Release Type is NOT missing
-      #   id: remove_warning_label
-      #   if: ${{ (needs.variables.outputs.RELEASE_TYPE != '') && contains(github.event.*.labels.*.name, env.WARNING_LABEL_RELEASE_TYPE_MISSING) }}
-      #   uses: actions/github-script@v6
-      #   with:
-      #     script: |
-      #       github.rest.issues.removeLabel({
-      #         issue_number: context.issue.number,
-      #         owner: context.repo.owner,
-      #         repo: context.repo.repo,
-      #         name: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
-      #       })            
+      - name: Remove warning label if PR and Release Type is NOT missing
+        id: remove_warning_label
+        if: ${{ (needs.variables.outputs.RELEASE_TYPE != '') && contains(github.event.*.labels.*.name, env.WARNING_LABEL_RELEASE_TYPE_MISSING) }}
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.removeLabel({
+              issue_number: ${{ env.EVENT_NUMBER }},
+              owner: ${{ env.REPOSITORY_OWNER }},
+              repo: ${{ env.REPOSITORY }},
+              name: ["${{ env.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
+            })            
 
   validation:
     # Use this job name in conjunction with branch protection requiring status checks to prevent merging
