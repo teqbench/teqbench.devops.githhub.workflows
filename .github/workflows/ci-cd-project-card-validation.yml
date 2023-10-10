@@ -202,6 +202,6 @@ jobs:
           echo "Project card validation SUCCESSFUL."
 
       - name: Log failure
-        if: ${{ !needs.verification.outputs.passed == 'false' }}
+        if: ${{ needs.verification.outputs.passed == 'false' }}
         run: |
           echo "Project card validation FAILED."
