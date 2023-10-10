@@ -19,11 +19,11 @@ on:
         type: string
         required: true
 
-    # Map the workflow outputs to job outputs
-    outputs:
-      passed:
-        description: "Workflow verification; true if all verification passed, otherwise false."
-        value: ${{ jobs.verification.outputs.success }}
+    # # Map the workflow outputs to job outputs
+    # outputs:
+    #   passed:
+    #     description: "Workflow verification; true if all verification passed, otherwise false."
+    #     value: ${{ jobs.verification.outputs.success }}
 env:
   ORGANIZATION: 'teq-bench'
   PROJECT_URL: https://github.com/orgs/teq-bench/projects/${{ inputs.project_number }}
@@ -184,10 +184,10 @@ jobs:
           echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned in order to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
 
-      - name: debug passed
-        run: |
-          echo "steps.is_merging_allowed.outputs.passed = " ${{ steps.is_merging_allowed.outputs.passed }}
-          echo "steps.is_release_type_set.outputs.passed = " ${{ steps.is_release_type_set.outputs.passed }}
+      # - name: debug passed
+      #   run: |
+      #     echo "steps.is_merging_allowed.outputs.passed = " ${{ steps.is_merging_allowed.outputs.passed }}
+      #     echo "steps.is_release_type_set.outputs.passed = " ${{ steps.is_release_type_set.outputs.passed }}
           
     outputs:
       passed: ${{ (steps.is_merging_allowed.outputs.passed != 'false') && (steps.is_release_type_set.outputs.passed != 'false') }}
@@ -196,12 +196,14 @@ jobs:
     needs: verification
     runs-on: ubuntu-latest
     steps:
-      - name: Log success
+      - name: Verification successful
         if: ${{ needs.verification.outputs.passed == 'true' }}
         run: |
           echo "Project card validation SUCCESSFUL."
-
-      - name: Log failure
+          exit 0
+          
+      - name: Verification failed
         if: ${{ needs.verification.outputs.passed == 'false' }}
         run: |
           echo "Project card validation FAILED."
+          exit 1
