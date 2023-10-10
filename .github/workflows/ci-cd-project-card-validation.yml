@@ -169,21 +169,23 @@ jobs:
         if: ${{ steps.get_mergable_field_value.outputs.values != env.OPTION_MERGABLE_PR_ALLOW_MERGE }}
         run: |
           echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ env.OPTION_MERGABLE_PR_ALLOW_MERGE }}' to proceed."
+          echo "Project card validation FAILED."
           exit 1
 
       - name: Is release type set for this pull request?
         if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
         run: |
           echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned in order to proceed."
+          echo "Project card validation FAILED."
           exit 1
 
       - name: Return workflow status
         run: |
-          if (always() && success()); then
-            echo "Project card validation succeeded. Exiting workflow."
-            exit 0
-          else
-            echo "Project card validation FAILED. Exiting workflow."
+          if (always() && failure()); then
+            echo "Project card validation FAILED."
             exit 1
+          else
+            echo "Project card validation SUCCESSFUL."
+            exit 0          
           fi          
       
