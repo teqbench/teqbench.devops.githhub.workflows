@@ -90,8 +90,8 @@ jobs:
           echo "release_type_value=${{ steps.get_release_type_field_value.outputs.values }}" >> $GITHUB_OUTPUT
           
     outputs:
-      MERGABLE: ${{ steps.assign_mergable_field_value.outputs.mergable_value }}
-      RELEASE_TYPE: ${{ steps.assign_release_type_field_value.outputs.release_type_value }}
+      MERGABLE: ${{ steps.assign_field_values_to_variables.outputs.mergable_value }}
+      RELEASE_TYPE: ${{ steps.assign_field_values_to_variables.outputs.release_type_value }}
 
   debug:
     runs-on: ubuntu-latest
