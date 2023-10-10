@@ -1,5 +1,5 @@
 name: Common Project Card Validation Workflow
-# Teq Bench - CI/CD - Common workflow project card validation for required (custom) settings/variables.
+# TeqBench - CI/CD - Common workflow project card validation for required (custom) settings/variables.
 
 on:
   workflow_call:
