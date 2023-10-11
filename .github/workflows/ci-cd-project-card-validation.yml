@@ -34,11 +34,6 @@ on:
         type: string
         required: true
 
-    # # Map the workflow outputs to job outputs
-    # outputs:
-    #   passed:
-    #     description: "Workflow verification; true if all verification passed, otherwise false."
-    #     value: ${{ jobs.verification.outputs.success }}
 env:
   ORGANIZATION: 'teqbench'
   PROJECT_URL: https://github.com/orgs/teqbench/projects/${{ inputs.project_number }}
