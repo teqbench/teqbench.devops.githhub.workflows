@@ -56,16 +56,7 @@ env:
   OPTION_STATUS_DONE: 'Done'
   
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Wait for prior instances of the workflow to finish
-        uses: softprops/turnstyle@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   merge_check:
-    needs: init
     runs-on: ubuntu-latest
     steps:
       - name: Is pull request closed and merged?
