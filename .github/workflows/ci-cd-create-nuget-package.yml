@@ -186,7 +186,7 @@ jobs:
             })
 
     outputs:
-      status: success()
+      status: success() || false
             
   cleanup:
     runs-on: ubuntu-latest
