@@ -181,7 +181,7 @@ jobs:
 
   create-package:
     runs-on: ubuntu-latest
-    needs: create-release
+    needs: [variables,create-release]
     env:
       BUILD_CONFIG: 'Release'
       # This environment variable is implicitly required by the Setup .NET step
