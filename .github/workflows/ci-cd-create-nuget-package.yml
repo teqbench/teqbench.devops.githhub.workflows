@@ -190,7 +190,7 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     if: always()
-    needs: [create-release,create-package]
+    needs: create-package
     steps:
       - name: Update Status field for pull request
         if: success()

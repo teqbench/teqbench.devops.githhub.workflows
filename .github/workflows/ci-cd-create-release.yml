@@ -64,7 +64,6 @@ env:
   REPOSITORY: ${{ inputs.repository }}
   REPOSITORY_OWNER: ${{ inputs.repository_owner }}
   REPOSITORY_NAME: ${{ inputs.repository_name }}  
-  CREATE_NUGET_PACKAGE: ${{ inputs.create-nuget-package }}
   VERSION_FILE: "version.json"
   CI_TAG_MESSAGE: "TeqBench - GitHub Build Artifacts"
   GIT_CONFIG_AUTHOR: "TeqBench DevOps"
