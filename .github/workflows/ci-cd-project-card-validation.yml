@@ -44,7 +44,8 @@ env:
   REPOSITORY_NAME: ${{ inputs.repository_name }}  
   OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED: 'Non-PR - Merging NOT allowed'
   OPTION_MERGABLE_PR_DO_NOT_MERGE: 'PR - Do NOT merge'
-  OPTION_MERGABLE_PR_ALLOW_MERGE: 'PR - Allow merge'
+  OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY: 'PR - Merge, release and deploy'
+  OPTION_MERGABLE_PR_MERGE_ONLY: 'PR - Merge ONLY'
   WARNING_LABEL_RELEASE_TYPE_MISSING: 'pull request - release type missing'
   OPTION_STATUS_TODO: 'Todo'
   OPTION_STATUS_IN_PROGRESS: 'In Progress'
@@ -188,9 +189,9 @@ jobs:
 
       - name: Is merging allowed for this pull request?
         id: is_merging_allowed
-        if: ${{ steps.get_mergable_field_value.outputs.values != env.OPTION_MERGABLE_PR_ALLOW_MERGE }}
+        if: ${{ steps.get_mergable_field_value.outputs.values != env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}
         run: |
-          echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ env.OPTION_MERGABLE_PR_ALLOW_MERGE }}' to proceed."
+          echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
 
       - name: Is release type set for this pull request?
