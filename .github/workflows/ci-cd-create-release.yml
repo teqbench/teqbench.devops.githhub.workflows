@@ -42,23 +42,18 @@ on:
       major:
         description: 'The major component of the version number.'
         value: ${{ jobs.create-release.outputs.major }}
-        default: 0
       minor:
         description: 'The minor component of the version number.'
         value: ${{ jobs.create-release.outputs.minor }}
-        default: 0
       patch:
         description: 'The patch component of the version number.'
         value: ${{ jobs.create-release.outputs.patch }}
-        default: 0
       build:
         description: 'The build component of the version number.'
         value: ${{ jobs.create-release.outputs.build }}
-        default: 0
       revision:
         description: 'The revision component of the version number.'
         value: ${{ jobs.create-release.outputs.revision }}
-        default: 0
       release_tag:
         description: "The version number in 'vMajor.Minor.Build.Revision' format."
         value: ${{ jobs.create-release.outputs.release_tag }}
