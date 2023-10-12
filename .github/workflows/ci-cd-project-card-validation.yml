@@ -79,15 +79,15 @@ jobs:
     if: (github.event_name != 'pull_request')
     runs-on: ubuntu-latest
     steps:
-      - name: Update Mergable field if NOT a PR and Mergable is NOT assigned '${{ vars.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}'
-        if: ${{ needs.variables.outputs.MERGABLE != vars.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
+      - name: Update Mergable field if NOT a PR and Mergable is NOT assigned '${{ vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}'
+        if: ${{ needs.variables.outputs.MERGABLE != vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
         uses: teqbench/project-fields@v2.1
         with:
           operation: set
           fields: Mergable
           github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
           project_url: ${{ env.PROJECT_URL }}
-          values: ${{ vars.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
+          values: ${{ vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
           
       - name: Clear Release Type field if NOT a PR and Release Type has been assigned to previously
         if: ${{ needs.variables.outputs.RELEASE_TYPE != '' }}
@@ -110,7 +110,7 @@ jobs:
           fields: Status
           github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
           project_url: ${{ env.PROJECT_URL }}
-          values: ${{ vars.OPTION_STATUS_IN_PROGRESS }}
+          values: ${{ vars.ORG_OPTION_STATUS_IN_PROGRESS }}
           
       - name: Update Mergable field if PR and Mergable is not assigned
         if: ${{ needs.variables.outputs.MERGABLE == '' }}
@@ -120,22 +120,22 @@ jobs:
           fields: Mergable
           github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
           project_url: ${{ env.PROJECT_URL }}
-          values: ${{ vars.OPTION_MERGABLE_PR_DO_NOT_MERGE }}
+          values: ${{ vars.ORG_OPTION_MERGABLE_PR_DO_NOT_MERGE }}
           
-      - name: Update Mergable field if PR and Mergable is incorrectly assigned '${{ vars.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}'
-        if: ${{ needs.variables.outputs.MERGABLE == vars.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
+      - name: Update Mergable field if PR and Mergable is incorrectly assigned '${{ vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}'
+        if: ${{ needs.variables.outputs.MERGABLE == vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
         uses: teqbench/project-fields@v2.1
         with:
           operation: set
           fields: Mergable
           github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
           project_url: ${{ env.PROJECT_URL }}
-          values: ${{ vars.OPTION_MERGABLE_PR_DO_NOT_MERGE }}
+          values: ${{ vars.ORG_OPTION_MERGABLE_PR_DO_NOT_MERGE }}
 
       - name: Remove 'Release Type Missing' warning label
         # Possible the warning label was applied after Release Type was assigned, so just
         # remove if already assigned.
-        if: ${{ contains(github.event.*.labels.*.name, vars.WARNING_LABEL_RELEASE_TYPE_MISSING) }}
+        if: ${{ contains(github.event.*.labels.*.name, vars.ORG_WARNING_LABEL_RELEASE_TYPE_MISSING) }}
         uses: actions/github-script@v6
         with:
           script: |
@@ -143,12 +143,12 @@ jobs:
               issue_number: ${{ env.EVENT_NUMBER }},
               owner: "${{ env.REPOSITORY_OWNER }}",
               repo: "${{ env.REPOSITORY_NAME }}",
-              name: ["${{ vars.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
+              name: ["${{ vars.ORG_WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
             })
             
       - name: Assign 'Release Type Missing' warning label
         # Only assign warning label if missing Release Type
-        if: ${{ (needs.variables.outputs.RELEASE_TYPE == '') && (needs.variables.outputs.MERGABLE == vars.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED) }}
+        if: ${{ (needs.variables.outputs.RELEASE_TYPE == '') && (needs.variables.outputs.MERGABLE == vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED) }}
         uses: actions/github-script@v6
         with:
           script: |
@@ -156,7 +156,7 @@ jobs:
               issue_number: ${{ env.EVENT_NUMBER }},
               owner: "${{ env.REPOSITORY_OWNER }}",
               repo: "${{ env.REPOSITORY_NAME }}",
-              labels: ["${{ vars.WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
+              labels: ["${{ vars.ORG_WARNING_LABEL_RELEASE_TYPE_MISSING }}"]
             })
 
   validation:
@@ -178,16 +178,16 @@ jobs:
 
       - name: Is merging allowed for this pull request?
         id: is_merging_allowed
-        if: ${{ (steps.get_mergable_field_value.outputs.values == vars.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED) || (steps.get_mergable_field_value.outputs.values == vars.OPTION_MERGABLE_PR_DO_NOT_MERGE) }}
+        if: ${{ (steps.get_mergable_field_value.outputs.values == vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED) || (steps.get_mergable_field_value.outputs.values == vars.ORG_OPTION_MERGABLE_PR_DO_NOT_MERGE) }}
         run: |
-          echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ vars.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' or '${{ vars.OPTION_MERGABLE_PR_MERGE_ONLY }}' to proceed."
+          echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' or '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_ONLY }}' to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
 
       - name: Is Release Type set for this pull request?
         id: is_release_type_set
-        if: ${{ (needs.variables.outputs.RELEASE_TYPE == '') && contains(steps.get_mergable_field_value.outputs.values, vars.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) }}
+        if: ${{ (needs.variables.outputs.RELEASE_TYPE == '') && contains(steps.get_mergable_field_value.outputs.values, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) }}
         run: |
-          echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned when 'Mergable' is assigned '${{ vars.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' in order to proceed."
+          echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned when 'Mergable' is assigned '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' in order to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
           
     outputs:
@@ -208,7 +208,7 @@ jobs:
           fields: Status
           github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
           project_url: ${{ env.PROJECT_URL }}
-          values: ${{ vars.OPTION_STATUS_PR_FAILURE }}
+          values: ${{ vars.ORG_OPTION_STATUS_PR_FAILURE }}
           
   validation_status:
     needs: [validation, update_project_card_post_validation]
