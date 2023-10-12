@@ -60,16 +60,13 @@ on:
         value: ${{ jobs.create-release.outputs.release_tag }}
         
 env:
-  PROJECT_URL: https://github.com/orgs/teqbench/projects/${{ inputs.project_number }}
+  PROJECT_URL: 'https://github.com/orgs/teqbench/projects/${{ inputs.project_number }}'
   EVENT_NUMBER: ${{ inputs.event_number }}
   RESOURCE_URL: ${{ inputs.resource_url }}
   REPOSITORY: ${{ inputs.repository }}
   REPOSITORY_OWNER: ${{ inputs.repository_owner }}
   REPOSITORY_NAME: ${{ inputs.repository_name }}  
-  VERSION_FILE: "version.json"
-  CI_TAG_MESSAGE: "TeqBench - GitHub Build Artifacts"
-  GIT_CONFIG_AUTHOR: "TeqBench DevOps"
-  GIT_CONFIG_EMAIL: "devops@teqbench.com"
+  VERSION_FILE: 'version.json'
   
 jobs:
   merge_check:
@@ -156,8 +153,8 @@ jobs:
       
       - name: Git Config
         run: |
-          git config --global user.name '${{ env.GIT_CONFIG_AUTHOR }}'
-          git config --global user.email '${{ env.GIT_CONFIG_EMAIL }}'    
+          git config --global user.name '${{ vars.ORG_DEVOPS_GIT_CONFIG_AUTHOR }}'
+          git config --global user.email '${{ vars.ORG_DEVOPS_GIT_CONFIG_EMAIL }}'    
           
       - name: Commit Changes To Version File
         run: |
