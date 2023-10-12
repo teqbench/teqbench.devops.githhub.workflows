@@ -159,7 +159,7 @@ jobs:
             
       - name: Assign 'Release Type Missing' warning label
         # Only assign warning label if missing Release Type
-        if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
+        if: ${{ (needs.variables.outputs.RELEASE_TYPE == '') && (needs.variables.outputs.MERGABLE == env.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED) }}
         uses: actions/github-script@v6
         with:
           script: |
@@ -194,11 +194,11 @@ jobs:
           echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' or '${{ env.OPTION_MERGABLE_PR_MERGE_ONLY }}' to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
 
-      - name: Is release type set for this pull request?
+      - name: Is Release Type set for this pull request?
         id: is_release_type_set
-        if: ${{ needs.variables.outputs.RELEASE_TYPE == '' }}
+        if: ${{ (needs.variables.outputs.RELEASE_TYPE == '') && (steps.get_mergable_field_value.outputs.values == env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) }}
         run: |
-          echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned in order to proceed."
+          echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned when 'Mergabl' is assigned '${{ env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' in order to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
           
     outputs:
