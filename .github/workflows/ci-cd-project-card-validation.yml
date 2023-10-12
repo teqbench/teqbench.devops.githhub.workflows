@@ -44,7 +44,7 @@ env:
   REPOSITORY_NAME: ${{ inputs.repository_name }}  
   OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED: 'Non-PR - Merging NOT allowed'
   OPTION_MERGABLE_PR_DO_NOT_MERGE: 'PR - Do NOT merge'
-  OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY: 'PR - Merge, release and deploy'
+  OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY: '"PR - Merge, release and deploy"'
   OPTION_MERGABLE_PR_MERGE_ONLY: 'PR - Merge ONLY'
   WARNING_LABEL_RELEASE_TYPE_MISSING: 'pull request - release type missing'
   OPTION_STATUS_TODO: 'Todo'
