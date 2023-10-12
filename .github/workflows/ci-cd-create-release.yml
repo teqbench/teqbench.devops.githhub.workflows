@@ -1,0 +1,227 @@
+name: Common Create Release Workflow
+# TeqBench - CI/CD - Common workflow to create a release. 
+
+on: 
+  workflow_call:
+    inputs:
+      repository:
+        description: The respository to create a release from.
+        type: string
+        required: true
+
+      repository_owner:
+        description: The respository's owner, i.e. teqbench.
+        type: string
+        required: true
+
+      repository_name:
+        description: The respository's name without owner, i.e. ci-cd-workflows.
+        type: string
+        required: true
+
+      resource_url:
+        type: string
+        description: 'The URL of the issue/PR to get or update'
+        required: true
+
+      event_number:
+        description: The issue/pr number the supplied resource URL is associated with to validate.
+        type: string
+        required: true
+        
+      project_number:
+        description: The project number the supplied resource URL is associated with to update.
+        type: string
+        required: true
+    
+    outputs:
+      status:
+        description: 'Workflow status.'
+        value: ${{ jobs.create-release.outputs.status }}
+        default: false
+      major:
+        description: 'The major component of the version number.'
+        value: ${{ jobs.create-release.outputs.major }}
+        default: 0
+      minor:
+        description: 'The minor component of the version number.'
+        value: ${{ jobs.create-release.outputs.minor }}
+        default: 0
+      patch:
+        description: 'The patch component of the version number.'
+        value: ${{ jobs.create-release.outputs.patch }}
+        default: 0
+      build:
+        description: 'The build component of the version number.'
+        value: ${{ jobs.create-release.outputs.build }}
+        default: 0
+      revision:
+        description: 'The revision component of the version number.'
+        value: ${{ jobs.create-release.outputs.revision }}
+        default: 0
+      release_tag:
+        description: "The version number in 'vMajor.Minor.Build.Revision' format."
+        value: ${{ jobs.create-release.outputs.release_tag }}
+        default: "v0.0.0.0"
+        
+env:
+  PROJECT_URL: https://github.com/orgs/teqbench/projects/${{ inputs.project_number }}
+  EVENT_NUMBER: ${{ inputs.event_number }}
+  RESOURCE_URL: ${{ inputs.resource_url }}
+  REPOSITORY: ${{ inputs.repository }}
+  REPOSITORY_OWNER: ${{ inputs.repository_owner }}
+  REPOSITORY_NAME: ${{ inputs.repository_name }}  
+  CREATE_NUGET_PACKAGE: ${{ inputs.create-nuget-package }}
+  VERSION_FILE: "version.json"
+  CI_TAG_MESSAGE: "TeqBench - GitHub Build Artifacts"
+  GIT_CONFIG_AUTHOR: "TeqBench DevOps"
+  GIT_CONFIG_EMAIL: "devops@teqbench.com"
+  
+jobs:
+  merge_check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Is pull request closed and merged?
+        if: github.event.pull_request.merged != true
+        run: |
+          echo "Pull request has been closed, but not merged."
+          echo "This CI/CD workflow requires the pull request be merged in order to proceed."
+          echo "Exiting workflow."
+          exit 1
+
+  variables:
+    needs: merge_check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Mergable Field Value
+        id: get_mergable_field_value
+        uses: teqbench/project-fields@v2.1
+        with:
+          operation: get
+          fields: Mergable
+          github_token: ${{ secrets.DEVOPS_PROJECT_READER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          resource_url: ${{ env.RESOURCE_URL }}
+          
+      - name: Get Release Type Field Value
+        id: get_release_type_field_value
+        uses: teqbench/project-fields@v2.1
+        with:
+          operation: get
+          fields: Release Type
+          github_token: ${{ secrets.DEVOPS_PROJECT_READER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          resource_url: ${{ env.RESOURCE_URL }}
+          
+      - name: Assign Field Values To Variables
+        id: assign_field_values_to_variables
+        run: |
+          echo "mergable_value=${{ steps.get_mergable_field_value.outputs.values }}" >> $GITHUB_OUTPUT
+          echo "release_type_value=${{ steps.get_release_type_field_value.outputs.values }}" >> $GITHUB_OUTPUT
+          
+    outputs:
+      mergable: ${{ steps.assign_field_values_to_variables.outputs.mergable_value }}
+      release_type: ${{ steps.assign_field_values_to_variables.outputs.release_type_value }}
+          
+  create-release:
+    runs-on: ubuntu-latest
+    needs: variables
+    # Although could just check fot see if release_type is an empty string, be explicit with the valid values it can be in order to proceed.
+    if: ${{ contains(needs.variables.outputs.mergable, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) && ((needs.variables.outputs.release_type == 'Major') || (needs.variables.outputs.release_type == 'Minor') || (needs.variables.outputs.release_type == 'Patch')) }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.REPOSITORY }}
+          ref: main
+          token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
+      
+      - name: Read Version File
+        id: read-version-file
+        # use 'jq' to read json data from the version.json file
+        # -c means to compact the output stream data instead of the default 'pretty-print' behavior
+        # . is the identity operator and it copies the input of the jq processor to the output stream
+        run: |
+          echo "version-json=$(jq -c . ${{ env.VERSION_FILE }})" >> $GITHUB_OUTPUT
+
+      - name: Get Current Version Number Components
+        id: get-version-number-components
+        uses: teqbench/version-number-components-action@v12
+        with:
+          release-type: ${{ needs.variables.outputs.release_type }}
+          version-json: ${{ steps.read-version-file.outputs.version-json }}
+          
+      - name: Update Version File
+        run: |
+          echo "`jq '(..|.major?) = ${{ steps.get-version-number-components.outputs.major }} | 
+          (..|.minor?) = ${{ steps.get-version-number-components.outputs.minor }} | 
+          (..|.patch?) = ${{ steps.get-version-number-components.outputs.patch }} | 
+          (..|.build?) = ${{ steps.get-version-number-components.outputs.build }} | 
+          (..|.revision?) = ${{ steps.get-version-number-components.outputs.revision }} 
+          | (..|.suffix?) = \"${{ steps.get-version-number-components.outputs.suffix }}\"' ${{ env.VERSION_FILE }}`" > ${{ env.VERSION_FILE }}
+      
+      - name: Git Config
+        run: |
+          git config --global user.name '${{ env.GIT_CONFIG_AUTHOR }}'
+          git config --global user.email '${{ env.GIT_CONFIG_EMAIL }}'    
+          
+      - name: Commit Changes To Version File
+        run: |
+          git add ${{ env.VERSION_FILE }}
+          git commit -m "Update to version ${{ steps.get-version-number-components.outputs.version }}"
+          git push
+          
+      - name: Tag & Push
+        run: |
+          git tag -a ${{ steps.get-version-number-components.outputs.tag }} -m "Added tag ${{ steps.get-version-number-components.outputs.tag }}"
+          git push origin ${{ steps.get-version-number-components.outputs.tag }}
+
+      - name: Create Release & Generate Notes
+        run: gh release create ${{ steps.get-version-number-components.outputs.tag }} --generate-notes --repo ${{ env.REPOSITORY }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
+
+      - name: Assign release label
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: ${{ env.EVENT_NUMBER }},
+              owner: "${{ env.REPOSITORY_OWNER }}",
+              repo: "${{ env.REPOSITORY_NAME }}",
+              labels: ["Release-${{ steps.get-version-number-components.outputs.tag }}"]
+            })
+            
+    outputs:
+      status: success()
+      major: ${{ steps.get-version-number-components.outputs.major }}
+      minor: ${{ steps.get-version-number-components.outputs.minor }}
+      patch: ${{ steps.get-version-number-components.outputs.patch }}
+      build: ${{ steps.get-version-number-components.outputs.build }}
+      revision: ${{ steps.get-version-number-components.outputs.revision }}
+      release_tag: ${{ steps.get-version-number-components.outputs.tag }}
+            
+  cleanup:
+    runs-on: ubuntu-latest
+    if: always()
+    needs: create-release
+    steps:
+      - name: Update Status field for pull request
+        if: success()
+        uses: teqbench/project-fields@v2.1
+        with:
+          operation: set
+          fields: Status
+          github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          values: ${{ vars.ORG_OPTION_STATUS_DONE }}
+        
+      - name: Update Status field for pull request
+        if: failure()
+        uses: teqbench/project-fields@v2.1
+        with:
+          operation: set
+          fields: Status
+          github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
+          project_url: ${{ env.PROJECT_URL }}
+          values: ${{ vars.ORG_OPTION_STATUS_PR_FAILURE }}
