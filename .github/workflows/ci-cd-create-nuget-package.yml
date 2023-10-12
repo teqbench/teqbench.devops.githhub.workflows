@@ -68,7 +68,6 @@ on:
       status:
         description: 'Workflow status.'
         value: ${{ jobs.create-package.outputs.status }}
-        default: false
         
 env:
   PROJECT_URL: https://github.com/orgs/teqbench/projects/${{ inputs.project_number }}
@@ -186,7 +185,7 @@ jobs:
             })
 
     outputs:
-      status: success() || false
+      status: success()
             
   cleanup:
     runs-on: ubuntu-latest
