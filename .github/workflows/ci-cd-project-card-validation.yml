@@ -198,7 +198,7 @@ jobs:
         id: is_release_type_set
         if: ${{ (needs.variables.outputs.RELEASE_TYPE == '') && contains(steps.get_mergable_field_value.outputs.values, env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) }}
         run: |
-          echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned when 'Mergabl' is assigned '${{ env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' in order to proceed."
+          echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned when 'Mergable' is assigned '${{ env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' in order to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
           
     outputs:
