@@ -34,34 +34,29 @@ on:
         type: string
         required: true
     
+    # NOTE: Job outputs are unicode strings, and cannot specify the type for workflow outputs. So,
+    # here, since returning job outputs, the return types are strings.
     outputs:
       status:
         description: 'Workflow status.'
-        type: boolean
         value: ${{ jobs.create-release.outputs.status }}
       major:
         description: 'The major component of the version number.'
-        type: number
         value: ${{ jobs.create-release.outputs.major }}
       minor:
         description: 'The minor component of the version number.'
-        type: number
         value: ${{ jobs.create-release.outputs.minor }}
       patch:
         description: 'The patch component of the version number.'
-        type: number
         value: ${{ jobs.create-release.outputs.patch }}
       build:
         description: 'The build component of the version number.'
-        type: number
         value: ${{ jobs.create-release.outputs.build }}
       revision:
         description: 'The revision component of the version number.'
-        type: number
         value: ${{ jobs.create-release.outputs.revision }}
       release_tag:
         description: "The version number in 'vMajor.Minor.Build.Revision' format."
-        type: string
         value: ${{ jobs.create-release.outputs.release_tag }}
         
 env:
