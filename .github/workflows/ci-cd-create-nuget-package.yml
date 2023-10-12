@@ -82,12 +82,12 @@ env:
   GIT_CONFIG_AUTHOR: "TeqBench"
   GIT_CONFIG_EMAIL: "teqbench@noreply.github.com"  
 
-  MAJOR: fromJSON(${{ inputs.major }})
-  MINOR: fromJSON(${{ inputs.minor }})
-  PATCH: fromJSON(${{ inputs.patch }})
-  BUILD: fromJSON(${{ inputs.build }})
-  REVISION: fromJSON(${{ inputs.revision }})
-  RELEASE_TAG: ${{ inputs.tag }}
+  MAJOR: ${{ fromJSON(inputs.major) }}
+  MINOR: ${{ fromJSON(inputs.minor) }}
+  PATCH: ${{ fromJSON(inputs.patch) }}
+  BUILD: ${{ fromJSON(inputs.build) }}
+  REVISION: ${{ fromJSON(inputs.revision) }}
+  RELEASE_TAG: inputs.tag
 
 jobs:
   merge_check:
