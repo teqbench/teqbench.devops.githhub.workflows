@@ -40,7 +40,6 @@ on:
         required: true
         
 env:
-  ORGANIZATION: 'teqbench'
   PROJECT_URL: https://github.com/orgs/teqbench/projects/${{ inputs.project_number }}
   EVENT_NUMBER: ${{ inputs.event_number }}
   RESOURCE_URL: ${{ inputs.resource_url }}
@@ -50,11 +49,8 @@ env:
   CREATE_NUGET_PACKAGE: ${{ inputs.create-nuget-package }}
   VERSION_FILE: "version.json"
   CI_TAG_MESSAGE: "Teq Bench - GitHub Build Artifacts"
-  GIT_CONFIG_AUTHOR: "Teq Bench"
+  GIT_CONFIG_AUTHOR: "TeqBench"
   GIT_CONFIG_EMAIL: "teqbench@noreply.github.com"
-  OPTION_STATUS_PR_FAILURE: 'PR Failure'
-  OPTION_STATUS_DONE: 'Done'
-  OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY: 'PR - Merge, release and deploy'
   
 jobs:
   merge_check:
@@ -106,7 +102,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: variables
     # Although could just check fot see if RELEASE_TYPE is an empty string, be explicit with the valid values it can be in order to proceed.
-    if: ${{ contains(needs.variables.outputs.MERGABLE, env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) && ((needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Minor') || (needs.variables.outputs.RELEASE_TYPE == 'Patch')) }}
+    if: ${{ contains(needs.variables.outputs.MERGABLE, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) && ((needs.variables.outputs.RELEASE_TYPE == 'Major') || (needs.variables.outputs.RELEASE_TYPE == 'Minor') || (needs.variables.outputs.RELEASE_TYPE == 'Patch')) }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -187,7 +183,7 @@ jobs:
       # This environment variable is implicitly required by the Setup .NET step
       NUGET_AUTH_TOKEN: ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
     # if: ${{ env.CREATE_NUGET_PACKAGE == 'true' }}    
-    if: ${{ contains(needs.variables.outputs.MERGABLE, env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) && inputs.create-nuget-package }}
+    if: ${{ contains(needs.variables.outputs.MERGABLE, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) && inputs.create-nuget-package }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -243,7 +239,7 @@ jobs:
           fields: Status
           github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
           project_url: ${{ env.PROJECT_URL }}
-          values: ${{ env.OPTION_STATUS_DONE }}
+          values: ${{ vars.ORG_OPTION_STATUS_DONE }}
           
       - name: Update Status field for pull request
         if: failure()
@@ -253,4 +249,4 @@ jobs:
           fields: Status
           github_token: ${{ secrets.DEVOPS_PROJECT_WRITER_TOKEN }}
           project_url: ${{ env.PROJECT_URL }}
-          values: ${{ env.OPTION_STATUS_PR_FAILURE }}
+          values: ${{ vars.ORG_OPTION_STATUS_PR_FAILURE }}
