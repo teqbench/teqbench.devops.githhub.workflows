@@ -41,23 +41,23 @@ on:
 
       major:
         description: "The major component of the version number."
-        type: number
+        type: string
         required: true
       minor:
         description: "The minor component of the version number."
-        type: number
+        type: string
         required: true
       patch:
         description: "The patch component of the version number."
-        type: number
+        type: string
         required: true
       build:
         description: "The build component of the version number."
-        type: number
+        type: string
         required: true
       revision:
         description: "The revision component of the version number."
-        type: number
+        type: string
         required: true
       release_tag:
         description: "The version number in 'vMajor.Minor.Build.Revision' format."
@@ -82,11 +82,11 @@ env:
   GIT_CONFIG_AUTHOR: "TeqBench"
   GIT_CONFIG_EMAIL: "teqbench@noreply.github.com"  
 
-  MAJOR: ${{ inputs.major }}
-  MINOR: ${{ inputs.minor }}
-  PATCH: ${{ inputs.patch }}
-  BUILD: ${{ inputs.build }}
-  REVISION: ${{ inputs.revision }}
+  MAJOR: fromJSON(${{ inputs.major }})
+  MINOR: fromJSON(${{ inputs.minor }})
+  PATCH: fromJSON(${{ inputs.patch }})
+  BUILD: fromJSON(${{ inputs.build }})
+  REVISION: fromJSON(${{ inputs.revision }})
   RELEASE_TAG: ${{ inputs.tag }}
 
 jobs:
