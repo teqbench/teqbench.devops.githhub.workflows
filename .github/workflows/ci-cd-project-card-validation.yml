@@ -189,9 +189,9 @@ jobs:
 
       - name: Is merging allowed for this pull request?
         id: is_merging_allowed
-        if: ${{ steps.get_mergable_field_value.outputs.values != env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}
+        if: ${{ (steps.get_mergable_field_value.outputs.values == env.OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED) || (steps.get_mergable_field_value.outputs.values == env.OPTION_MERGABLE_PR_DO_NOT_MERGE) }}
         run: |
-          echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' to proceed."
+          echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ env.OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' or '${{ env.OPTION_MERGABLE_PR_MERGE_ONLY }}' to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
 
       - name: Is release type set for this pull request?
