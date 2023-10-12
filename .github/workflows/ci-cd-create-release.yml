@@ -38,7 +38,6 @@ on:
       status:
         description: 'Workflow status.'
         value: ${{ jobs.create-release.outputs.status }}
-        default: false
       major:
         description: 'The major component of the version number.'
         value: ${{ jobs.create-release.outputs.major }}
@@ -57,7 +56,6 @@ on:
       release_tag:
         description: "The version number in 'vMajor.Minor.Build.Revision' format."
         value: ${{ jobs.create-release.outputs.release_tag }}
-        default: "v0.0.0.0"
         
 env:
   PROJECT_URL: https://github.com/orgs/teqbench/projects/${{ inputs.project_number }}
@@ -188,13 +186,13 @@ jobs:
             })
             
     outputs:
-      status: success()
-      major: ${{ steps.get-version-number-components.outputs.major }}
-      minor: ${{ steps.get-version-number-components.outputs.minor }}
-      patch: ${{ steps.get-version-number-components.outputs.patch }}
-      build: ${{ steps.get-version-number-components.outputs.build }}
-      revision: ${{ steps.get-version-number-components.outputs.revision }}
-      release_tag: ${{ steps.get-version-number-components.outputs.tag }}
+      status: success() || false
+      major: ${{ steps.get-version-number-components.outputs.major || 0 }}
+      minor: ${{ steps.get-version-number-components.outputs.minor || 0 }}
+      patch: ${{ steps.get-version-number-components.outputs.patch || 0 }}
+      build: ${{ steps.get-version-number-components.outputs.build || 0 }}
+      revision: ${{ steps.get-version-number-components.outputs.revision || 0 }}
+      release_tag: ${{ steps.get-version-number-components.outputs.tag || "v0.0.0.0" }}
             
   cleanup:
     runs-on: ubuntu-latest
