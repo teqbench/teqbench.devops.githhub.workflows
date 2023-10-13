@@ -118,7 +118,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: variables
     # Although could just check fot see if release_type is an empty string, be explicit with the valid values it can be in order to proceed.
-    if: ${{ contains(needs.variables.outputs.mergable, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) && ((needs.variables.outputs.release_type == 'Major') || (needs.variables.outputs.release_type == 'Minor') || (needs.variables.outputs.release_type == 'Patch')) }}
+    if: ${{ (contains(needs.variables.outputs.mergable, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE) || contains(needs.variables.outputs.mergable, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY)) && ((needs.variables.outputs.release_type == 'Major') || (needs.variables.outputs.release_type == 'Minor') || (needs.variables.outputs.release_type == 'Patch')) }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
