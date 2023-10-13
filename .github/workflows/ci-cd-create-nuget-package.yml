@@ -34,11 +34,6 @@ on:
         type: string
         required: true
 
-      create-nuget-package:
-        description: "Create and upload a NuGet package to the Org's package repository on GitHub. Defaults to false."
-        type: boolean
-        required: true
-
       # This re-useable workflow is primarily used in conjunction with the ci-cd-create-release workflow and uses its outputs
       # to populate the follow version component inputs. Outputs however are unicode strings. So, set the type of the inputs here to string 
       # for easier support.
@@ -79,7 +74,6 @@ env:
   REPOSITORY: ${{ inputs.repository }}
   REPOSITORY_OWNER: ${{ inputs.repository_owner }}
   REPOSITORY_NAME: ${{ inputs.repository_name }}  
-  CREATE_NUGET_PACKAGE: ${{ inputs.create-nuget-package }}
   MAJOR: ${{ inputs.major }}
   MINOR: ${{ inputs.minor }}
   PATCH: ${{ inputs.patch }}
@@ -139,7 +133,7 @@ jobs:
       BUILD_CONFIG: 'Release'
       # This environment variable is implicitly required by the Setup .NET step
       NUGET_AUTH_TOKEN: ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
-    if: ${{ contains(needs.variables.outputs.mergable, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) && inputs.create-nuget-package }}
+    if: ${{ contains(needs.variables.outputs.mergable, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
