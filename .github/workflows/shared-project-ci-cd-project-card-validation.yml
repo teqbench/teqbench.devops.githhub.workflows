@@ -71,4 +71,4 @@ jobs:
      repository_name: ${{ inputs.event.repository.name }}
      resource_url: ${{ inputs.resource_url }}
      event_number: ${{ inputs.event_number }}
-     project_number: ${{ event_number.project_number }}
+     project_number: ${{ inputs.project_number }}
