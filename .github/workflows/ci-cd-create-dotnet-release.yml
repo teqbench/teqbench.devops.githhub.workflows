@@ -1,5 +1,5 @@
-name: Common Create Release Workflow
-# TeqBench - CI/CD - Common workflow to create a release. 
+name: Common Create .NET Release Workflow
+# TeqBench - CI/CD - Common workflow to create a .NET release. 
 
 on: 
   workflow_call:

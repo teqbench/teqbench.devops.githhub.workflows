@@ -45,7 +45,7 @@ concurrency:
 jobs:
   common_ci_cd_create_release_workflow:
     name: Invoke Common Create Release Workflow
-    uses: teqbench/ci-cd-workflows/.github/workflows/ci-cd-create-release.yml@main
+    uses: teqbench/ci-cd-workflows/.github/workflows/ci-cd-create-dotnet-release.yml@main
     secrets: inherit
     with:
      repository: ${{ inputs.repository }}

@@ -1,5 +1,5 @@
 name: Common Create and Deploy NuGet Package Workflow
-# TeqBench - CI/CD - Common workflow to create a NuGet package and (optionally) deploy to the organization's package registry on GitHub.
+# TeqBench - CI/CD - Common workflow to create a NuGet package and deploy to the organization's package registry on GitHub.
 
 on: 
   workflow_call:
