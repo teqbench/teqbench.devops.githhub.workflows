@@ -35,18 +35,6 @@ on:
         type: string
         default: ${{ vars.ORG_COMMON_CI_CD_BOARD_PROJECT_NUMBER }}
 
-# on:
-#   pull_request:
-#     # Handle the pull_request event triggers here, except 'closed' in order to always have the 'Mergable' and 'Release Type' evaluations up to date. 
-#     # See https://frontside.com/blog/2020-05-26-github-actions-pull_request/ for more details on the specific event triggers for a pull request.
-#     # The 'closed' trigger is handled by the ci-cd.yml workflow.
-#     types: [opened,edited,reopened,synchronize,converted_to_draft,ready_for_review]
-#     branches:
-#       - main
-#   issues:
-#     branches:
-#       - main
-    
 # The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. 
 # For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
 # `concurrency.group` generates a concurrency group name from the workflow name and repository name. 
