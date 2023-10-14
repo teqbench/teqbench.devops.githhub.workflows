@@ -1,0 +1,64 @@
+name: Shared Project Release/Deploy .NET Service App Workflow
+# TeqBench - CI/CD - Create a release and build/deploy a .NET service application.
+# NOTE: Currently, only supports creating a release...the build/deploy part of the workflow has not been implemented.
+# Run the project's CI/CD to build/deploy service app only when have merged PR to main branch.
+
+on:
+  workflow_call:
+     inputs:
+      repository:
+        description: The respository to create a release from.
+        type: string
+        default: ${{ github.repository }}
+
+      repository_owner:
+        description: The respository's owner, i.e. teqbench.
+        type: string
+        default: ${{ github.repository_owner }}
+
+      repository_name:
+        description: The respository's name without owner, i.e. ci-cd-workflows.
+        type: string
+        default: ${{ github.event.repository.name }}
+
+      resource_url:
+        type: string
+        description: 'The URL of the issue/PR to get or update'
+        default: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
+
+      event_number:
+        description: The issue/pr number the supplied resource URL is associated with to validate.
+        type: string
+        default: ${{ github.event.issue.number || github.event.pull_request.number }}
+        
+      project_number:
+        description: The project number the supplied resource URL is associated with to update.
+        type: string
+        default: ${{ vars.ORG_COMMON_CI_CD_BOARD_PROJECT_NUMBER }}
+
+# The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. 
+# For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
+# `concurrency.group` generates a concurrency group name from the workflow name and repository name. 
+# The `||` operator is used to define fallback values.
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.repository || github.head_ref || github.ref }}'
+  
+jobs:
+  common_ci_cd_create_release_workflow:
+    name: Invoke Common Create Release Workflow
+    uses: teqbench/ci-cd-workflows/.github/workflows/ci-cd-create-dotnet-release.yml@main
+    secrets: inherit
+    with:
+     repository: ${{ inputs.repository }}
+     repository_owner: ${{ inputs.repository_owner }}
+     repository_name: ${{ inputs.repository_name }}
+     resource_url: ${{ inputs.resource_url }}
+     event_number: ${{ inputs.event_number }}
+     project_number: ${{ inputs.project_number }}
+
+  # NOTE: Currently, only supports creating a release...the build/deploy part of the workflow has not been implemented.
+
+  # common_ci_cd_build_deploy_service_app_workflow:
+  #   name: Invoke Common .NET Build/Deploy Service App Workflow
+  #   needs: common_ci_cd_create_release_workflow
+
