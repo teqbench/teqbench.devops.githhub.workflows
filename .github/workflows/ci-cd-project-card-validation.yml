@@ -180,14 +180,14 @@ jobs:
         id: is_merging_allowed
         if: ${{ (steps.get_mergable_field_value.outputs.values == vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED) || (steps.get_mergable_field_value.outputs.values == vars.ORG_OPTION_MERGABLE_PR_DO_NOT_MERGE) }}
         run: |
-          echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' or '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_ONLY }}' to proceed."
+          echo "This CI/CD workflow requires the pull request have the 'Mergable' setting assigned the value '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_ONLY }}', '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE }}', or '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
 
       - name: Is Release Type set for this pull request?
         id: is_release_type_set
-        if: ${{ (needs.variables.outputs.RELEASE_TYPE == '') && contains(steps.get_mergable_field_value.outputs.values, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY) }}
+        if: ${{ (needs.variables.outputs.RELEASE_TYPE == '') && (contains(steps.get_mergable_field_value.outputs.values, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE) || contains(steps.get_mergable_field_value.outputs.values, vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY)) }}
         run: |
-          echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned when 'Mergable' is assigned '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' in order to proceed."
+          echo "This CI/CD workflow requires the pull request to have the 'Release Type' setting assigned when 'Mergable' is assigned '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE }}' or '${{ vars.ORG_OPTION_MERGABLE_PR_MERGE_RELEASE_DEPLOY }}' in order to proceed."
           echo "passed=false" >> $GITHUB_OUTPUT
           
     outputs:
