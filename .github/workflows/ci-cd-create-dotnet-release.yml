@@ -137,7 +137,7 @@ jobs:
 
       - name: Get Current Version Number Components
         id: get-version-number-components
-        uses: teqbench/version-number-components-action@v12
+        uses: teqbench/version-number-components-action@v13
         with:
           release-type: ${{ needs.variables.outputs.release_type }}
           version-json: ${{ steps.read-version-file.outputs.version-json }}
