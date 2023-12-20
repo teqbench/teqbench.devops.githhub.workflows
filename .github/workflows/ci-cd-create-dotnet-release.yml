@@ -66,7 +66,7 @@ env:
   REPOSITORY: ${{ inputs.repository }}
   REPOSITORY_OWNER: ${{ inputs.repository_owner }}
   REPOSITORY_NAME: ${{ inputs.repository_name }}  
-  VERSION_FILE: 'version.json'
+  VERSION_FILE: 'src/version.json'
   
 jobs:
   merge_check:
