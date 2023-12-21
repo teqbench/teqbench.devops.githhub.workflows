@@ -80,6 +80,8 @@ env:
   BUILD: ${{ inputs.build }}
   REVISION: ${{ inputs.revision }}
   RELEASE_TAG: ${{ inputs.release_tag }}
+  SRC_FOLDER: './src'
+  PACKAGE_PUBLISH_FOLDER: './publish'
 
 jobs:
   merge_check:
@@ -156,23 +158,15 @@ jobs:
         # This will build ALL projects in the solution.
         run: dotnet build -c:${{ env.BUILD_CONFIG }} -p:major=${{ env.MAJOR }} -p:minor=${{ env.MINOR }} -p:patch=${{ env.PATCH }} -p:build=${{ env.BUILD }} -p:revision=${{ env.REVISION }} --no-restore
 
-      - name: Navigate To Src Folder
-        # Navigate to the src folder in order run the 'pack' command ONLY against the project from which a NuGet package will be created; do not want to include any 'test' projects.
-        run: cd src
-
       - name: Create Package
         # The dotnet command would not run here using multiline; once put all on single line, ran successfully.
-        run: dotnet pack -c:${{ env.BUILD_CONFIG }} -p:major=${{ env.MAJOR }} -p:minor=${{ env.MINOR }} -p:patch=${{ env.PATCH }} -p:build=${{ env.BUILD }} -p:revision=${{ env.REVISION }} --no-build
+        run: dotnet pack ${{ env.SRC_FOLDER }} -c:${{ env.BUILD_CONFIG }} -p:major=${{ env.MAJOR }} -p:minor=${{ env.MINOR }} -p:patch=${{ env.PATCH }} -p:build=${{ env.BUILD }} -p:revision=${{ env.REVISION }} -o ${{ env.PACKAGE_PUBLISH_FOLDER }}  --no-build
       
       - name: Publish Package
         # The token, DEVOPS_PACKAGE_PUBLISHER_TOKEN, belongs to the devops-teqbench-com user and has repo/packages:write scope
         # however, publishing appears to only work when the owner of the supplied town is also assigned the 'owner' role
         # within the GitHub organzation which own's the repo being packaged/published.
-        run: dotnet nuget push bin/Release/*.nupkg --skip-duplicate --api-key ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
-
-      - name: Navigate To Solution (Root) Folder
-        # Navigate to the solution folder, which is the root folder of the repo and apply the new label/tag.
-        run: cd ..
+        run: dotnet nuget push ${{ env.PACKAGE_PUBLISH_FOLDER }}/*.nupkg --skip-duplicate --api-key ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
 
       - name: Assign Publish Label
         uses: actions/github-script@v6
