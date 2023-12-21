@@ -35,6 +35,11 @@ on:
         type: string
         default: ${{ vars.ORG_COMMON_CI_CD_BOARD_PROJECT_NUMBER }}
 
+      project_source_folder:
+        description: The folder the project to be packaged as NuGet package is located.
+        type: string
+        default: './src'
+
 # The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. 
 # For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
 # `concurrency.group` generates a concurrency group name from the workflow name and repository name. 
@@ -54,6 +59,7 @@ jobs:
      resource_url: ${{ inputs.resource_url }}
      event_number: ${{ inputs.event_number }}
      project_number: ${{ inputs.project_number }}
+     project_source_folder: ${{ inputs.project_source_folder }}
 
   common_ci_cd_create_nuget_package_workflow:
     name: Invoke Common .NET NuGet Package Workflow
@@ -67,6 +73,7 @@ jobs:
      resource_url: ${{ inputs.resource_url }}
      event_number: ${{ inputs.event_number }}
      project_number: ${{ inputs.project_number }}
+     project_source_folder: ${{ inputs.project_source_folder }}
      major: ${{ needs.common_ci_cd_create_release_workflow.outputs.major }}
      minor: ${{ needs.common_ci_cd_create_release_workflow.outputs.minor }}
      patch: ${{ needs.common_ci_cd_create_release_workflow.outputs.patch }}

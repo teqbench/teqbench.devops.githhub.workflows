@@ -34,6 +34,11 @@ on:
         type: string
         required: true
 
+      project_source_folder:
+        description: The folder the project to be packaged as NuGet package is located.
+        type: string
+        required: true
+  
       # This re-useable workflow is primarily used in conjunction with the ci-cd-create-release workflow and uses its outputs
       # to populate the follow version component inputs. Outputs however are unicode strings. So, set the type of the inputs here to string 
       # for easier support.
@@ -80,7 +85,7 @@ env:
   BUILD: ${{ inputs.build }}
   REVISION: ${{ inputs.revision }}
   RELEASE_TAG: ${{ inputs.release_tag }}
-  SRC_FOLDER: './src'
+  SRC_FOLDER: ${{ inputs.project_source_folder }}
   PACKAGE_PUBLISH_FOLDER: './publish'
 
 jobs:
