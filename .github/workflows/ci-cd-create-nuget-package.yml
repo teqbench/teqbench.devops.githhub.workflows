@@ -153,7 +153,12 @@ jobs:
 
       - name: Build Solution
         # The dotnet command would not run here using multiline; once put all on single line, ran successfully.
+        # This will build ALL projects in the solution.
         run: dotnet build -c:${{ env.BUILD_CONFIG }} -p:major=${{ env.MAJOR }} -p:minor=${{ env.MINOR }} -p:patch=${{ env.PATCH }} -p:build=${{ env.BUILD }} -p:revision=${{ env.REVISION }} --no-restore
+
+      - name: Navigate To Src Folder
+        # Navigate to the src folder in order run the 'pack' command ONLY against the project from which a NuGet package will be created; do not want to include any 'test' projects.
+        run: cd src
 
       - name: Create Package
         # The dotnet command would not run here using multiline; once put all on single line, ran successfully.
@@ -165,7 +170,11 @@ jobs:
         # within the GitHub organzation which own's the repo being packaged/published.
         run: dotnet nuget push bin/Release/*.nupkg --skip-duplicate --api-key ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
 
-      - name: Assign publish label
+      - name: Navigate To Solution (Root) Folder
+        # Navigate to the solution folder, which is the root folder of the repo and apply the new label/tag.
+        run: cd ..
+
+      - name: Assign Publish Label
         uses: actions/github-script@v6
         with:
           script: |
