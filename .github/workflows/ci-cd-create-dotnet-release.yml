@@ -33,7 +33,12 @@ on:
         description: The project number the supplied resource URL is associated with to update.
         type: string
         required: true
-    
+
+      project_source_folder:
+        description: The folder the project to be packaged as NuGet package is located.
+        type: string
+        required: true
+          
     # NOTE: Job outputs are unicode strings, and cannot specify the type for workflow outputs. So,
     # here, since returning job outputs, the return types are strings.
     outputs:
@@ -66,7 +71,7 @@ env:
   REPOSITORY: ${{ inputs.repository }}
   REPOSITORY_OWNER: ${{ inputs.repository_owner }}
   REPOSITORY_NAME: ${{ inputs.repository_name }}  
-  VERSION_FILE: 'src/version.json'
+  VERSION_FILE: '${{ inputs.project_source_folder }}/version.json'
   
 jobs:
   merge_check:
