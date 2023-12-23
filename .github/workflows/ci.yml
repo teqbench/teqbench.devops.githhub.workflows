@@ -57,19 +57,19 @@ concurrency:
     group: '${{ github.workflow }} @ ${{ github.repository || github.head_ref || github.ref }}'
 
 jobs:
-  merge_check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Is pull request closed and merged?
-        if: github.event.pull_request.merged != true
-        run: |
-          echo "Pull request has been closed, but not merged."
-          echo "This CI/CD workflow requires the pull request be merged in order to proceed."
-          echo "Exiting workflow."
-          exit 1
+  # merge_check:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Is pull request closed and merged?
+  #       if: github.event.pull_request.merged != true
+  #       run: |
+  #         echo "Pull request has been closed, but not merged."
+  #         echo "This CI/CD workflow requires the pull request be merged in order to proceed."
+  #         echo "Exiting workflow."
+  #         exit 1
 
   build-and-test:
-    needs: merge_check
+    # needs: merge_check
     runs-on: ubuntu-latest
     # needs: variables
     env:
