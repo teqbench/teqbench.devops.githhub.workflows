@@ -103,7 +103,7 @@ jobs:
 
     - name: Update Build Number
       id: get-version-number-components
-      uses: teqbench/version-number-components-action@v13
+      uses: teqbench/version-number-components-action@v14
       with:
         release-type: 'BUILD'
         version-json: ${{ env.VERSION_FILE }}
