@@ -47,7 +47,6 @@ env:
     REPOSITORY_NAME: ${{ inputs.repository_name }}
     SRC_FOLDER: ${{ inputs.project_source_folder }}    
     VERSION_FILE: '${{ inputs.project_source_folder }}/version.json'
-    
 
 # The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. 
 # For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
@@ -90,11 +89,11 @@ jobs:
         dotnet-version: 8.0.X
         source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
 
-    - name: Restore Dependencies
+    - name: Restore .NET Project Dependencies
       run: dotnet restore
 
-    - name: Get Current Version Number Components
-      id: read-version-file
+    - name: Get Current Version JSON From Version File
+      id: get-version-json
       # use 'jq' to read json data from the version.json file
       # -c means to compact the output stream data instead of the default 'pretty-print' behavior
       # . is the identity operator and it copies the input of the jq processor to the output stream
@@ -102,26 +101,43 @@ jobs:
         echo "version-json=$(jq -c . ${{ env.VERSION_FILE }})" >> $GITHUB_OUTPUT
 
     - name: Increment Build Number
-      id: get-version-number-components
+      id: increment-build-number
       uses: teqbench/version-number-components-action@v14
       with:
+        # By specifying a release type of "BUILD", only the build number will be incremented.
         release-type: 'BUILD'
-        version-json: ${{ steps.read-version-file.outputs.version-json }}
-        
-    # - name: Update Version File
-    #   run: |
-    #     echo "`jq '(..|.major?) = ${{ steps.get-version-number-components.outputs.major }} | 
-    #     (..|.minor?) = ${{ steps.get-version-number-components.outputs.minor }} | 
-    #     (..|.patch?) = ${{ steps.get-version-number-components.outputs.patch }} | 
-    #     (..|.build?) = ${{ steps.get-version-number-components.outputs.build }} | 
-    #     (..|.revision?) = ${{ steps.get-version-number-components.outputs.revision }} 
-    #     | (..|.suffix?) = \"${{ steps.get-version-number-components.outputs.suffix }}\"' ${{ env.VERSION_FILE }}`" > ${{ env.VERSION_FILE }}
+        version-json: ${{ steps.get-version-json.outputs.version-json }}
 
     - name: Build Solution
       id: build-solution
       # The dotnet command would not run here using multiline; once put all on single line, ran successfully.
       # This will build ALL projects in the solution.
-      run: dotnet build -c:${{ env.BUILD_CONFIG }} -p:major=${{ steps.get-version-number-components.outputs.major }} -p:minor=${{ steps.get-version-number-components.outputs.minor }} -p:patch=${{ steps.get-version-number-components.outputs.patch }} -p:build=${{ steps.get-version-number-components.outputs.build }} -p:revision=${{ steps.get-version-number-components.outputs.revision }} --no-restore
+      run: dotnet build -c:${{ env.BUILD_CONFIG }} -p:major=${{ steps.increment-build-number.outputs.major }} -p:minor=${{ steps.increment-build-number.outputs.minor }} -p:patch=${{ steps.increment-build-number.outputs.patch }} -p:build=${{ steps.increment-build-number.outputs.build }} -p:revision=${{ steps.increment-build-number.outputs.revision }} --no-restore
+
+    - name: Update Version File With New Build Number
+      run: |
+        echo "`jq '(..|.major?) = ${{ steps.increment-build-number.outputs.major }} | 
+        (..|.minor?) = ${{ steps.increment-build-number.outputs.minor }} | 
+        (..|.patch?) = ${{ steps.increment-build-number.outputs.patch }} | 
+        (..|.build?) = ${{ steps.increment-build-number.outputs.build }} | 
+        (..|.revision?) = ${{ steps.increment-build-number.outputs.revision }} 
+        | (..|.suffix?) = \"${{ steps.increment-build-number.outputs.suffix }}\"' ${{ env.VERSION_FILE }}`" > ${{ env.VERSION_FILE }}
+
+    - name: Git Config
+      run: |
+        git config --global user.name '${{ vars.ORG_DEVOPS_GIT_CONFIG_AUTHOR }}'
+        git config --global user.email '${{ vars.ORG_DEVOPS_GIT_CONFIG_EMAIL }}'    
+          
+    - name: Commit Changes To Version File
+      run: |
+        git add ${{ env.VERSION_FILE }}
+        git commit -m "Update to version ${{ steps.increment-build-number.outputs.version }}"
+        git push
+          
+    - name: Tag & Push
+      run: |
+        git tag -a ${{ steps.increment-build-number.outputs.tag }} -m "Added tag ${{ steps.increment-build-number.outputs.tag }}"
+        git push origin ${{ steps.increment-build-number.outputs.tag }}
 
     - name: Run Unit Tests
       id: run-unit-tests
