@@ -5,39 +5,39 @@ on:
   workflow_call:
     inputs:
       repository:
-        description: "The respository to create a release for and, optionally, create a NuGet package for."
+        description: "The respository to build and test."
         type: string
-        required: true
+        default: ${{ github.repository }}
 
       repository_owner:
         description: "The respository's owner, i.e. teqbench."
         type: string
-        required: true
+        default: ${{ github.repository_owner }}
 
       repository_name:
-        description: The respository's name without owner, i.e. ci-cd-workflows.
+        description: "The respository's name without owner, i.e. ci-cd-workflows."
         type: string
-        required: true
+        default: ${{ github.event.repository.name }}
 
-      resource_url:
-        type: string
-        description: "The URL of the issue/PR to get or update"
-        required: true
+      # resource_url:
+      #   type: string
+      #   description: "The URL of the issue/PR to get or update"
+      #   default: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
 
-      event_number:
-        description: "The issue/pr number the supplied resource URL is associated with to validate."
-        type: string
-        required: true
+      # event_number:
+      #   description: "The issue/pr number the supplied resource URL is associated with to validate."
+      #   type: string
+      #   required: true
         
-      project_number:
-        description: "The project number the supplied resource URL is associated with to update."
-        type: string
-        required: true
+      # project_number:
+      #   description: "The project number the supplied resource URL is associated with to update."
+      #   type: string
+      #   required: true
 
       project_source_folder:
         description: The folder the project to be packaged as NuGet package is located.
         type: string
-        required: true      
+        default: './src'
 
 env:
     DOTNET_VERSION: '8.0.X'
