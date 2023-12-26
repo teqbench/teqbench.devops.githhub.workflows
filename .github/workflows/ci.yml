@@ -76,10 +76,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Create .badges Directory If Does Not Exist
-      run: echo 'mkdir -p .badges'
+      run: mkdir -p .badges
 
     - name: Create badges Directory If Does Not Exist
-      run: echo 'mkdir -p badges'
+      run: mkdir -p badges
 
     - name: List folders to see if actually created
       run: ls -l -a
