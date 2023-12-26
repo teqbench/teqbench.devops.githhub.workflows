@@ -47,7 +47,7 @@ env:
     REPOSITORY_NAME: ${{ inputs.repository_name }}
     SRC_FOLDER: ${{ inputs.project_source_folder }}    
     VERSION_FILE: '${{ inputs.project_source_folder }}/version.json'
-    BADGES_FOLDER: '${{ inputs.project_source_folder }}/'
+    BADGES_FOLDER: '${{ inputs.project_source_folder }}/.badges/'
     DOT_NET_VERSION: '8.0.X'
     BUILD_CONFIG: 'Release'
     RELEASE_TYPE: 'BUILD'
@@ -151,7 +151,7 @@ jobs:
     
     - name: Save Build Status Badge
       id: save-build-status-badge
-      run: echo ${{ steps.update-build-status-badge.outputs.svg }} > '${{ env.BADGES_FOLDER }}build-status.svg'
+      run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.BADGES_FOLDER }}build-status.svg'
               
     - name: Run Unit Tests
       id: run-unit-tests
