@@ -75,6 +75,10 @@ jobs:
     # needs: merge_check
     runs-on: ubuntu-latest
     # needs: variables
+    
+    permissions:
+      contents: write
+      
     env:
       # This environment variable is implicitly required by the Setup .NET step
       NUGET_AUTH_TOKEN: ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
