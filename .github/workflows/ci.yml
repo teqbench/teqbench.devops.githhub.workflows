@@ -157,8 +157,12 @@ jobs:
       with:
         badge-type: 'PASSING'
         label: 'build'
-        
-    - name: Save Build Status Badge
+
+    - name: Remove Build Status Badge File
+      id: remove-build-status-badge-file
+      run: rm -f ${{ env.BUILD_STATUS_BADGE_FILE }}
+      
+    - name: Save Build Status Badge File
       id: save-build-status-badge
       run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.BUILD_STATUS_BADGE_FILE }}'
 
@@ -175,8 +179,12 @@ jobs:
         badge-type: 'INFORMATION'
         label: 'build #'
         message: '${{ steps.increment-build-number.outputs.build }}'
+
+    - name: Remove Build Number Badge File
+      id: remove-build-number-badge-file
+      run: rm -f ${{ env.BUILD_NUMBER_BADGE_FILE }}
     
-    - name: Save Build Number Badge
+    - name: Save Build Number Badge File
       id: save-build-number-badge
       run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.BUILD_NUMBER_BADGE_FILE }}'
 
