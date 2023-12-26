@@ -95,15 +95,6 @@ jobs:
         ref: ${{ env.BRANCH }}
         token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: ${{ env.DOT_NET_VERSION }}
-        source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
-
-    - name: Restore .NET Project Dependencies
-      run: dotnet restore
-
     - name: Create .badges Directory If Does Not Exist
       run: echo 'mkdir -p .badges'
 
@@ -112,6 +103,15 @@ jobs:
 
     - name: List folders to see if actually created
       run: ls -l -a
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOT_NET_VERSION }}
+        source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+
+    - name: Restore .NET Project Dependencies
+      run: dotnet restore
 
     - name: Get Current Version JSON From Version File
       id: get-version-json
