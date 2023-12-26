@@ -42,7 +42,7 @@ on:
       badges_folder:
         description: "The folder for the repo's badges."
         type: string
-        default: './badges'
+        default: './.badges'
 
 env:
     DOTNET_VERSION: '8.0.X'
