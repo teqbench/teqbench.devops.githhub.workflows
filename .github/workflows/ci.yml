@@ -108,7 +108,7 @@ jobs:
       run: dotnet restore
 
     - name: Create Badges Directory If Does Not Exist
-      run: echo 'mkdir -p ${{ env.BADGES_FOLDER }}'
+      run: mkdir -p ${{ env.BADGES_FOLDER }}
 
     - name: Get Current Version JSON From Version File
       id: get-version-json
