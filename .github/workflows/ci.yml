@@ -51,7 +51,7 @@ env:
     REPOSITORY_OWNER: ${{ inputs.repository_owner }}
     REPOSITORY_NAME: ${{ inputs.repository_name }}
     SRC_FOLDER: ${{ inputs.project_source_folder }}    
-    BADGES_FOLDER: '${{ inputs.badged_folder }}'
+    BADGES_FOLDER: '${{ inputs.badges_folder }}'
     VERSION_FILE: '${{ inputs.project_source_folder }}/version.json'
     BUILD_STATUS_BADGE_FILE: '${{ inputs.badged_folder }}/build-status.svg'
     DOT_NET_VERSION: '8.0.X'
