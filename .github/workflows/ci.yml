@@ -53,7 +53,7 @@ env:
     SRC_FOLDER: ${{ inputs.project_source_folder }}    
     BADGES_FOLDER: '${{ inputs.badged_folder }}'
     VERSION_FILE: '${{ inputs.project_source_folder }}/version.json'
-    BUILD_STATUS_BADGE: '${{ inputs.badged_folder }}/build-status.svg'
+    BUILD_STATUS_BADGE_FILE: '${{ inputs.badged_folder }}/build-status.svg'
     DOT_NET_VERSION: '8.0.X'
     BUILD_CONFIG: 'Release'
     RELEASE_TYPE: 'BUILD'
@@ -156,11 +156,11 @@ jobs:
     
     - name: Save Build Status Badge
       id: save-build-status-badge
-      run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.BUILD_STATUS_BADGE }}'
+      run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.BUILD_STATUS_BADGE_FILE }}'
 
     - name: Commit Changes To Build Status Badge File
       run: |
-        git add '${{ env.BADGES_FOLDER }}/build-status.svg'
+        git add '${{ env.BUILD_STATUS_BADGE_FILE }}'
         git commit -m "Update build status badge"
         git push
       
