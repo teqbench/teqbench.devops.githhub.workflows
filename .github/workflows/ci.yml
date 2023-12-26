@@ -158,20 +158,11 @@ jobs:
         badge-type: 'PASSING'
         label: 'build'
 
-    - name: Remove Build Status Badge File
-      id: remove-build-status-badge-file
-      run: rm -f ${{ env.BUILD_STATUS_BADGE_FILE }}
-      
+    # If new build status badge file is the same an one being overwritten, git will NOT detect a change in the file as both are same size.
     - name: Save Build Status Badge File
       id: save-build-status-badge
       run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.BUILD_STATUS_BADGE_FILE }}'
-
-    - name: Commit Changes To Build Status Badge File
-      run: |
-        git add '${{ env.BUILD_STATUS_BADGE_FILE }}'
-        git commit -m "Update build status badge"
-        git push
-
+    
     - name: Update Build Number Badge
       id: update-build-number-badge
       uses: teqbench/badge-maker-action@v1.0.1
@@ -180,18 +171,16 @@ jobs:
         label: 'build #'
         message: '${{ steps.increment-build-number.outputs.build }}'
 
-    - name: Remove Build Number Badge File
-      id: remove-build-number-badge-file
-      run: rm -f ${{ env.BUILD_NUMBER_BADGE_FILE }}
-    
+    # The build number badge file shoule ALWAYS change as the build number is incremented with every build.
     - name: Save Build Number Badge File
       id: save-build-number-badge
       run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.BUILD_NUMBER_BADGE_FILE }}'
 
-    - name: Commit Changes To Build Number Badge File
+    # Should ALWAYS have at least one change, and that is to the build number badge file.
+    - name: Commit Changes To Any Badges
       run: |
-        git add '${{ env.BUILD_NUMBER_BADGE_FILE }}'
-        git commit -m "Update build number badge"
+        git add ${{ env.BADGES_FOLDER }}
+        git commit -m "Update repo badges."
         git push
         
     - name: Tag & Push
