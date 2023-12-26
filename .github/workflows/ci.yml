@@ -100,8 +100,11 @@ jobs:
     - name: Restore .NET Project Dependencies
       run: dotnet restore
 
-    - name: Create Badges Directory If Does Not Exist
-      run: echo 'mkdir -p ${{ env.BADGES_FOLDER }}; touch ${{ env.BADGES_FOLDER }}/build-status.svg'
+    - name: Create .badges Directory If Does Not Exist
+      run: echo 'mkdir -p .badges'
+
+    - name: Create badges Directory If Does Not Exist
+      run: echo 'mkdir -p badges'
 
     - name: List folders to see if actually created
       run: ls -l -a
