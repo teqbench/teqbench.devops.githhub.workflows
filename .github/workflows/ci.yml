@@ -47,6 +47,7 @@ env:
     REPOSITORY_NAME: ${{ inputs.repository_name }}
     SRC_FOLDER: ${{ inputs.project_source_folder }}    
     VERSION_FILE: '${{ inputs.project_source_folder }}/version.json'
+    BADGES_FOLDER: '${{ inputs.project_source_folder }}/'
     DOT_NET_VERSION: '8.0.X'
     BUILD_CONFIG: 'Release'
     RELEASE_TYPE: 'BUILD'
@@ -141,6 +142,17 @@ jobs:
         git tag -a ${{ steps.increment-build-number.outputs.tag }} -m "Added tag ${{ steps.increment-build-number.outputs.tag }}"
         git push origin ${{ steps.increment-build-number.outputs.tag }}
 
+    - name: Update Build Status Badge
+      id: update-build-status-badge
+      uses: teqbench/badge-maker-action@v1.0.1
+      with:
+        badge-type: 'PASSING'
+        label: 'build'
+    
+    - name: Save Build Status Badge
+      id: save-build-status-badge
+      run: echo ${{ steps.update-build-status-badge.outputs.svg }} > '${{ env.BADGES_FOLDER }}build-status.svg'
+              
     - name: Run Unit Tests
       id: run-unit-tests
       run: dotnet test ${{ env.SRC_FOLDER }} --no-restore --verbosity normal
