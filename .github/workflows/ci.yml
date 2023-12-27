@@ -55,8 +55,7 @@ env:
     VERSION_FILE: '${{ inputs.project_source_folder }}/version.json'    
     BADGE_FILE_BUILD_STATUS: '${{ inputs.badges_folder }}/build-status.svg'
     BADGE_FILE_BUILD_NUMBER: '${{ inputs.badges_folder }}/build-number.svg'
-    BADGE_FILE_TEST_STATUS: '${{ inputs.badges_folder }}/test-status.svg'
-    BADGE_FILE_TEST_COVERAGE: '${{ inputs.badges_folder }}/test-coverage.svg'
+    BADGE_FILE_CODE_COVERAGE: '${{ inputs.badges_folder }}/code-coverage.svg'
     BADGE_FILE_RELEASE_DATE: '${{ inputs.badges_folder }}/release-date.svg'
     BADGE_FILE_RELEASE_TAG: '${{ inputs.badges_folder }}/release-tag.svg'
     BADGE_FILE_DEPLOY_DATE: '${{ inputs.badges_folder }}/deploy-date.svg'
@@ -142,6 +141,10 @@ jobs:
       # This will build ALL projects in the solution.
       run: dotnet build -c:${{ env.BUILD_CONFIG }} -p:major=${{ steps.increment-build-number.outputs.major }} -p:minor=${{ steps.increment-build-number.outputs.minor }} -p:patch=${{ steps.increment-build-number.outputs.patch }} -p:build=${{ steps.increment-build-number.outputs.build }} -p:revision=${{ steps.increment-build-number.outputs.revision }} --no-restore
 
+    - name: Run Unit Tests
+      id: run-unit-tests
+      run: dotnet test ${{ env.SRC_FOLDER }} --no-restore --verbosity normal
+
     - name: Update Version File With New Build Number
       run: |
         echo "`jq '(..|.major?) = ${{ steps.increment-build-number.outputs.major }} | 
@@ -182,6 +185,18 @@ jobs:
       id: save-build-number-badge-file
       run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.BADGE_FILE_BUILD_NUMBER }}'
 
+    - name: Update Code Coverage Badge
+      id: update-code-coverage-badge
+      uses: teqbench/badge-maker-action@v1.0.1
+      with:
+        badge-type: 'FAILING'
+        label: 'Coverage'
+        message: '0%'
+
+    - name: Save Code Coverage Badge File
+      id: save-code-coverage-badge-file
+      run: echo '${{ steps.update-code-coverage-badge.outputs.svg }}' > '${{ env.BADGE_FILE_CODE_COVERAGE }}'
+
     - name: Update Release Date Badge
       id: update-release-date-badge
       uses: teqbench/badge-maker-action@v1.0.1
@@ -218,6 +233,3 @@ jobs:
         git tag -a ${{ steps.increment-build-number.outputs.tag }} -m "Added tag ${{ steps.increment-build-number.outputs.tag }}"
         git push origin ${{ steps.increment-build-number.outputs.tag }}
               
-    - name: Run Unit Tests
-      id: run-unit-tests
-      run: dotnet test ${{ env.SRC_FOLDER }} --no-restore --verbosity normal
