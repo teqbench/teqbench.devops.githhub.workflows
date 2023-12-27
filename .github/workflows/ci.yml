@@ -158,7 +158,6 @@ jobs:
       run: |
         git add ${{ env.VERSION_FILE }}
         git commit -m "Update to version ${{ steps.increment-build-number.outputs.version }}"
-        git push
 
     - name: Update Build Status Badge
       id: update-build-status-badge
@@ -167,7 +166,7 @@ jobs:
         badge-type: 'PASSING'
         label: 'build'
 
-    # If new build status badge file is the same an one being overwritten, git will NOT detect a change in the file as both are same size.
+    # If new build status badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
     - name: Save Build Status Badge File
       id: save-build-status-badge-file
       run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.BADGE_FILE_BUILD_STATUS }}'
@@ -185,51 +184,50 @@ jobs:
       id: save-build-number-badge-file
       run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.BADGE_FILE_BUILD_NUMBER }}'
 
+    # If new coverage badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
     - name: Update Code Coverage Badge
       id: update-code-coverage-badge
       uses: teqbench/badge-maker-action@v1.0.1
       with:
-        badge-type: 'FAILING'
+        badge-type: 'WARNING'
         label: 'Coverage'
-        message: '0%'
+        message: '65%'
 
     - name: Save Code Coverage Badge File
       id: save-code-coverage-badge-file
       run: echo '${{ steps.update-code-coverage-badge.outputs.svg }}' > '${{ env.BADGE_FILE_CODE_COVERAGE }}'
 
-    - name: Update Release Date Badge
-      id: update-release-date-badge
-      uses: teqbench/badge-maker-action@v1.0.1
-      with:
-        badge-type: 'DATESTAMP'
-        label: 'release date'
-        datestamp-timezone: 'US/Mountain'
+    # - name: Update Release Date Badge
+    #   id: update-release-date-badge
+    #   uses: teqbench/badge-maker-action@v1.0.1
+    #   with:
+    #     badge-type: 'DATESTAMP'
+    #     label: 'release date'
+    #     datestamp-timezone: 'US/Mountain'
         
-    - name: Save Release Date Badge File
-      id: save-release-date-badge-file
-      run: echo '${{ steps.update-release-date-badge.outputs.svg }}' > '${{ env.BADGE_FILE_RELEASE_TAG }}'
+    # - name: Save Release Date Badge File
+    #   id: save-release-date-badge-file
+    #   run: echo '${{ steps.update-release-date-badge.outputs.svg }}' > '${{ env.BADGE_FILE_RELEASE_TAG }}'
 
-    - name: Update Release Tag Badge
-      id: update-release-tag-badge
-      uses: teqbench/badge-maker-action@v1.0.1
-      with:
-        badge-type: 'INFORMATION'
-        label: 'release tag'
-        message: '${{ steps.increment-build-number.outputs.tag }}'
+    # - name: Update Release Tag Badge
+    #   id: update-release-tag-badge
+    #   uses: teqbench/badge-maker-action@v1.0.1
+    #   with:
+    #     badge-type: 'INFORMATION'
+    #     label: 'release tag'
+    #     message: '${{ steps.increment-build-number.outputs.tag }}'
         
-    - name: Save Release Date Badge File
-      id: save-release-tag-badge-file
-      run: echo '${{ steps.update-release-tag-badge.outputs.svg }}' > '${{ env.BADGE_FILE_RELEASE_DATE }}'      
+    # - name: Save Release Tag Badge File
+    #   id: save-release-tag-badge-file
+    #   run: echo '${{ steps.update-release-tag-badge.outputs.svg }}' > '${{ env.BADGE_FILE_RELEASE_DATE }}'      
         
     # Should ALWAYS have at least one change, and that is to the build number badge file.
     - name: Commit Changes To Any Badges
       run: |
         git add ${{ env.BADGES_FOLDER }}
         git commit -m "Update repo badges."
-        git push
         
-    - name: Tag & Push
+    - name: Push All Build Commits
       run: |
-        git tag -a ${{ steps.increment-build-number.outputs.tag }} -m "Added tag ${{ steps.increment-build-number.outputs.tag }}"
         git push origin ${{ steps.increment-build-number.outputs.tag }}
               
