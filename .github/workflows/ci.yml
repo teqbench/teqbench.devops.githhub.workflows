@@ -188,7 +188,8 @@ jobs:
       with:
         badge-type: 'DATESTAMP'
         label: 'release date'
-
+        datestamp-timezone: 'US/Mountain'
+        
     - name: Save Release Date Badge File
       id: save-release-date-badge-file
       run: echo '${{ steps.update-release-date-badge.outputs.svg }}' > '${{ env.BADGE_FILE_RELEASE_TAG }}'
@@ -200,7 +201,6 @@ jobs:
         badge-type: 'INFORMATION'
         label: 'release tag'
         message: '${{ steps.increment-build-number.outputs.tag }}'
-        datestamp-timezone: 'US/Mountain'
         
     - name: Save Release Date Badge File
       id: save-release-tag-badge-file
