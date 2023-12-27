@@ -158,7 +158,7 @@ jobs:
       run: |
         git add ${{ env.VERSION_FILE }}
         git commit -m "Update to version ${{ steps.increment-build-number.outputs.version }}"
-
+        
     - name: Update Build Status Badge
       id: update-build-status-badge
       uses: teqbench/badge-maker-action@v1.0.2
@@ -226,8 +226,8 @@ jobs:
       run: |
         git add ${{ env.BADGES_FOLDER }}
         git commit -m "Update repo badges."
-        
+
     - name: Push All Build Commits
       run: |
-        git push origin ${{ steps.increment-build-number.outputs.tag }}
+        git push
               
