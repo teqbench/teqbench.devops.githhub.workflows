@@ -200,7 +200,8 @@ jobs:
         badge-type: 'INFORMATION'
         label: 'release tag'
         message: '${{ steps.increment-build-number.outputs.tag }}'
-
+        datestamp: 'US/Mountain'
+        
     - name: Save Release Date Badge File
       id: save-release-tag-badge-file
       run: echo '${{ steps.update-release-tag-badge.outputs.svg }}' > '${{ env.BADGE_FILE_RELEASE_DATE }}'      
