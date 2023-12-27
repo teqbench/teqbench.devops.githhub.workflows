@@ -199,6 +199,7 @@ jobs:
       with:
         badge-type: 'INFORMATION'
         label: 'release tag'
+        message: '${{ steps.increment-build-number.outputs.tag }}'
 
     - name: Save Release Date Badge File
       id: save-release-tag-badge-file
