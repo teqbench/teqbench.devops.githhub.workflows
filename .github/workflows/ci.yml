@@ -200,7 +200,7 @@ jobs:
         badge-type: 'INFORMATION'
         label: 'release tag'
         message: '${{ steps.increment-build-number.outputs.tag }}'
-        datestamp: 'US/Mountain'
+        datestamp-timezone: 'US/Mountain'
         
     - name: Save Release Date Badge File
       id: save-release-tag-badge-file
