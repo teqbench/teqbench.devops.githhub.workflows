@@ -52,9 +52,15 @@ env:
     REPOSITORY_NAME: ${{ inputs.repository_name }}
     SRC_FOLDER: ${{ inputs.project_source_folder }}    
     BADGES_FOLDER: '${{ inputs.badges_folder }}'
-    VERSION_FILE: '${{ inputs.project_source_folder }}/version.json'
-    BUILD_STATUS_BADGE_FILE: '${{ inputs.badges_folder }}/build-status.svg'
-    BUILD_NUMBER_BADGE_FILE: '${{ inputs.badges_folder }}/build-number.svg'
+    VERSION_FILE: '${{ inputs.project_source_folder }}/version.json'    
+    BADGE_FILE_BUILD_STATUS: '${{ inputs.badges_folder }}/build-status.svg'
+    BADGE_FILE_BUILD_NUMBER: '${{ inputs.badges_folder }}/build-number.svg'
+    BADGE_FILE_TEST_STATUS: '${{ inputs.badges_folder }}/test-status.svg'
+    BADGE_FILE_TEST_COVERAGE: '${{ inputs.badges_folder }}/test-coverage.svg'
+    BADGE_FILE_RELEASE_DATE: '${{ inputs.badges_folder }}/release-date.svg'
+    BADGE_FILE_RELEASE_TAG: '${{ inputs.badges_folder }}/release-tag.svg'
+    BADGE_FILE_DEPLOY_DATE: '${{ inputs.badges_folder }}/deploy-date.svg'
+    BADGE_FILE_DEPLOY_VERSION: '${{ inputs.badges_folder }}/deploy-version.svg'
     DOT_NET_VERSION: '8.0.X'
     BUILD_CONFIG: 'Release'
     RELEASE_TYPE: 'BUILD'
@@ -160,8 +166,8 @@ jobs:
 
     # If new build status badge file is the same an one being overwritten, git will NOT detect a change in the file as both are same size.
     - name: Save Build Status Badge File
-      id: save-build-status-badge
-      run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.BUILD_STATUS_BADGE_FILE }}'
+      id: save-build-status-badge-file
+      run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.BADGE_FILE_BUILD_STATUS }}'
     
     - name: Update Build Number Badge
       id: update-build-number-badge
@@ -173,9 +179,31 @@ jobs:
 
     # The build number badge file shoule ALWAYS change as the build number is incremented with every build.
     - name: Save Build Number Badge File
-      id: save-build-number-badge
-      run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.BUILD_NUMBER_BADGE_FILE }}'
+      id: save-build-number-badge-file
+      run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.BADGE_FILE_BUILD_NUMBER }}'
 
+    - name: Update Release Date Badge
+      id: update-release-date-badge
+      uses: teqbench/badge-maker-action@v1.0.1
+      with:
+        badge-type: 'DATESTAMP'
+        label: 'release date'
+
+    - name: Save Release Date Badge File
+      id: save-release-date-badge-file
+      run: echo '${{ steps.update-release-date-badge.outputs.svg }}' > '${{ env.BADGE_FILE_RELEASE_TAG }}'
+
+    - name: Update Release Tag Badge
+      id: update-release-tag-badge
+      uses: teqbench/badge-maker-action@v1.0.1
+      with:
+        badge-type: 'INFORMATION'
+        label: 'release tag'
+
+    - name: Save Release Date Badge File
+      id: save-release-tag-badge-file
+      run: echo '${{ steps.update-release-tag-badge.outputs.svg }}' > '${{ env.BADGE_FILE_RELEASE_DATE }}'      
+        
     # Should ALWAYS have at least one change, and that is to the build number badge file.
     - name: Commit Changes To Any Badges
       run: |
