@@ -153,7 +153,7 @@ jobs:
 
     - name: Update Build Status Badge
       id: update-build-status-badge
-      uses: teqbench/badge-maker-action@v1.0.1
+      uses: teqbench/badge-maker-action@v1.0.2
       with:
         badge-type: 'PASSING'
         label: 'build'
