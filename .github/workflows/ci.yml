@@ -161,7 +161,7 @@ jobs:
         
     - name: Update Build Status Badge
       id: update-build-status-badge
-      uses: teqbench/teqbench.dev.ci.actions.badge-maker@v1.0.2
+      uses: teqbench/teqbench.dev.ci.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: 'PASSING'
         label: 'build'
@@ -173,7 +173,7 @@ jobs:
     
     - name: Update Build Number Badge
       id: update-build-number-badge
-      uses: teqbench/teqbench.dev.ci.actions.badge-maker@v1.0.1
+      uses: teqbench/teqbench.dev.ci.githhub.actions.badge-maker@v1.0.1
       with:
         badge-type: 'INFORMATION'
         label: 'build #'
@@ -187,7 +187,7 @@ jobs:
     # If new coverage badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
     - name: Update Code Coverage Badge
       id: update-code-coverage-badge
-      uses: teqbench/teqbench.dev.ci.actions.badge-maker@v1.0.1
+      uses: teqbench/teqbench.dev.ci.githhub.actions.badge-maker@v1.0.1
       with:
         badge-type: 'WARNING'
         label: 'Coverage'
@@ -199,7 +199,7 @@ jobs:
 
     # - name: Update Release Date Badge
     #   id: update-release-date-badge
-    #   uses: teqbench/teqbench.dev.ci.actions.badge-maker@v1.0.1
+    #   uses: teqbench/teqbench.dev.ci.githhub.actions.badge-maker@v1.0.1
     #   with:
     #     badge-type: 'DATESTAMP'
     #     label: 'release date'
@@ -211,7 +211,7 @@ jobs:
 
     # - name: Update Release Tag Badge
     #   id: update-release-tag-badge
-    #   uses: teqbench/teqbench.dev.ci.actions.badge-maker@v1.0.1
+    #   uses: teqbench/teqbench.dev.ci.githhub.actions.badge-maker@v1.0.1
     #   with:
     #     badge-type: 'INFORMATION'
     #     label: 'release tag'
