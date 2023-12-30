@@ -204,7 +204,7 @@ jobs:
       if: ${{ steps.run-unit-tests.outcome == 'success' }}
       uses: teqbench/teqbench.devops.githhub.actions.coverage-reader@v1.0.1
       with:
-        coverage-xml: '<coverage line-rate="0.708"></coverage>'
+        coverage-xml: '<coverage line-rate="0.751"></coverage>'
 
     # coverage >=75.0 success
     # coverage >= 60 and coverage < 75.0 warning
