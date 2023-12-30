@@ -45,7 +45,7 @@ on:
         default: './.badges'
 
 env:
-  DOT_NET_VERSION: '8.0.X'
+  BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
   BUILD_CONFIG_NAME: 'Release'
   BUILD_CONFIG_RELEASE_TYPE: 'BUILD'
   BUILD_CONFIG_REPOSITORY: ${{ inputs.repository }}
@@ -109,7 +109,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: ${{ env.DOT_NET_VERSION }}
+        dotnet-version: ${{ env.BUILD_CONFIG_DOTNET_VERSION }}
         source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
 
     - name: Restore .NET Project Dependencies
