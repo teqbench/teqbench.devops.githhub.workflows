@@ -178,7 +178,7 @@ jobs:
     # If new build status badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
     - name: Save Build Status Badge File
       id: save-build-status-badge-file
-      if: ${{ success() && steps.update-build-status-badge.outcome == 'success' }}
+      if: ${{ always() && steps.update-build-status-badge.outcome == 'success' }}
       run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_BUILD_STATUS }}'
     
     - name: Update Build Number Badge
@@ -192,7 +192,7 @@ jobs:
 
     - name: Save Build Number Badge File
       id: save-build-number-badge-file
-      if: ${{ success() && steps.update-build-number-badge.outcome == 'success' }}
+      if: ${{ always() && steps.update-build-number-badge.outcome == 'success' }}
       run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_BUILD_NUMBER }}'
 
     # # If new coverage badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
@@ -233,13 +233,15 @@ jobs:
     #   run: echo '${{ steps.update-release-tag-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_RELEASE_DATE }}'      
         
     # Should ALWAYS have at least one change, and that is to the build number badge file.
-    - name: Commit Changes To Any Badges
+    - name: Commit Badge Changes
+      id: commit-badge-changes
       if: ${{ always() && steps.save-build-status-badge-file.outcome == 'success' && steps.save-build-number-badge-file.outcome == 'success' }}
       run: |
         git add ${{ env.FOLDER_PATH_BADGES }}
         git commit -m "Update repo badges."
 
     - name: Push All Build Commits
+      if: ${{ always() && steps.commit-version-file.outcome == 'success' && steps.commit-badge-changes.outcome == 'success' }}
       run: |
         git push
-              
+  
