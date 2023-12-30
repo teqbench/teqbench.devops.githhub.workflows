@@ -57,7 +57,7 @@ env:
   FILE_PATH_VERSION: '${{ inputs.project_source_folder }}/version.json'    
   FILE_PATH_BADGE_BUILD_STATUS: '${{ inputs.badges_folder }}/build-status.svg'
   FILE_PATH_BADGE_BUILD_NUMBER: '${{ inputs.badges_folder }}/build-number.svg'
-  FILE_PATH_BADGE_CODE_COVERAGE: '${{ inputs.badges_folder }}/code-coverage.svg'
+  FILE_PATH_BADGE_COVERAGE: '${{ inputs.badges_folder }}/code-coverage.svg'
   FILE_PATH_BADGE_RELEASE_DATE: '${{ inputs.badges_folder }}/release-date.svg'
   FILE_PATH_BADGE_RELEASE_TAG: '${{ inputs.badges_folder }}/release-tag.svg'
   FILE_PATH_BADGE_DEPLOY_DATE: '${{ inputs.badges_folder }}/deploy-date.svg'
@@ -195,6 +195,32 @@ jobs:
       if: ${{ always() && steps.update-build-number-badge.outcome == 'success' }}
       run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_BUILD_NUMBER }}'
 
+    # read coverage xml from file
+    # pass coverage xml to action to get coverage %
+    - name: Get Coverage Value
+      id: get-coverage-value
+      if: ${{ steps.run-unit-tests.outcome == 'success' }}
+      uses: teqbench/teqbench.devops.githhub.actions.coverage-reader@v1.0.1
+      with:
+        coverage-xml: '<coverage line-rate="0.708" branch-rate="0.5" version="1.9" timestamp="1703907994" lines-covered="17" lines-valid="24" branches-covered="2" branches-valid="4"><sources><source>/Users/ben/Development/TeqBench/GitHub/teqbench.system.data.nosql.mongodb.models/src/</source>  </sources></coverage>'
+
+    - name: Update Coverage Badge
+      id: update-coverage-badge
+      if: ${{ always() }}
+      uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
+      with:
+        badge-type: 'INFORMATION'
+        label: 'coverage'
+        message: ${{ format('{0}%', (contains(steps.increment-build-number.outcome,'success') && contains(steps.commit-version-file.outcome,'success')) && steps.get-coverage-value.outputs.coverage || 0) }}
+
+    - name: Save Coverage Badge File
+      id: save-coverage-badge-file
+      if: ${{ always() && steps.update-coverage-badge.outcome == 'success' }}
+      run: echo '${{ steps.update-coverage-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_COVERAGE }}'
+          
+    # update coverage badge
+    # save coverage badge
+
     # # If new coverage badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
     # - name: Update Code Coverage Badge
     #   id: update-code-coverage-badge
@@ -206,7 +232,7 @@ jobs:
 
     # - name: Save Code Coverage Badge File
       # id: save-code-coverage-badge-file
-      # run: echo '${{ steps.update-code-coverage-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_CODE_COVERAGE }}'
+      # run: echo '${{ steps.update-code-coverage-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_COVERAGE }}'
 
     # - name: Update Release Date Badge
     #   id: update-release-date-badge
