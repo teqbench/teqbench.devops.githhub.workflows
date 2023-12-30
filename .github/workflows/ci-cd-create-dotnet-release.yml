@@ -91,7 +91,7 @@ jobs:
     steps:
       - name: Get Mergable Field Value
         id: get_mergable_field_value
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: get
           fields: Mergable
@@ -101,7 +101,7 @@ jobs:
           
       - name: Get Release Type Field Value
         id: get_release_type_field_value
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: get
           fields: Release Type
@@ -204,7 +204,7 @@ jobs:
     steps:
       - name: Update Status field for pull request
         if: success()
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: set
           fields: Status
@@ -214,7 +214,7 @@ jobs:
         
       - name: Update Status field for pull request
         if: failure()
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: set
           fields: Status
