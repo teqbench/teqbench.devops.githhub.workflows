@@ -115,6 +115,9 @@ jobs:
     - name: Restore .NET Project Dependencies
       run: dotnet restore
 
+    - name: Create Badges Directory If Does Not Exist
+      run: mkdir -p ${{ env.FOLDER_PATH_BADGES }}
+
     - name: Get Current Version JSON From Version File
       id: get-version-json
       # use 'jq' to read json data from the version.json file
@@ -123,6 +126,7 @@ jobs:
       run: |
         echo "version-json=$(jq -c . ${{ env.FILE_PATH_VERSION }})" >> $GITHUB_OUTPUT
 
+    # Increment the build number BEFORE building the solution so have the updated version number components to pass as parameters.
     - name: Increment Build Number
       id: increment-build-number
       uses: teqbench/teqbench.devops.githhub.actions.version-updater@v14
@@ -137,11 +141,16 @@ jobs:
       # This will build ALL projects in the solution.
       run: dotnet build -c:${{ env.BUILD_CONFIG_NAME }} -p:major=${{ steps.increment-build-number.outputs.major }} -p:minor=${{ steps.increment-build-number.outputs.minor }} -p:patch=${{ steps.increment-build-number.outputs.patch }} -p:build=${{ steps.increment-build-number.outputs.build }} -p:revision=${{ steps.increment-build-number.outputs.revision }} --no-restore
 
+    # Only run unit tests if all prior steps, including the Build Solution step, were successful.
     - name: Run Unit Tests
       id: run-unit-tests
+      if: ${{ success() }}
       run: dotnet test ${{ env.FOLDER_PATH_SOURCE }} --no-restore --verbosity normal
 
+    # Always update the version file with new build number, even if build fails, and if the increment build number step was successful.
     - name: Update Version File With New Build Number
+      if: ${{ always() && steps.increment-build-number.outcome == 'success' }}
+      id: update-version-file
       run: |
         echo "`jq '(..|.major?) = ${{ steps.increment-build-number.outputs.major }} | 
         (..|.minor?) = ${{ steps.increment-build-number.outputs.minor }} | 
@@ -149,56 +158,59 @@ jobs:
         (..|.build?) = ${{ steps.increment-build-number.outputs.build }} | 
         (..|.revision?) = ${{ steps.increment-build-number.outputs.revision }} 
         | (..|.suffix?) = \"${{ steps.increment-build-number.outputs.suffix }}\"' ${{ env.FILE_PATH_VERSION }}`" > ${{ env.FILE_PATH_VERSION }}
-          
+
+    # Always commit the version file with new build number, even if build fails, and if the update version file step was successful.
     - name: Commit Changes To Version File
+      id: commit-version-file
+      if: ${{ always() && steps.update-version-file.outcome == 'success' }}
       run: |
         git add ${{ env.FILE_PATH_VERSION }}
         git commit -m "Update to version ${{ steps.increment-build-number.outputs.version }}"
-
-    - name: Create Badges Directory If Does Not Exist
-      run: mkdir -p ${{ env.FOLDER_PATH_BADGES }}         
-
+  
     - name: Update Build Status Badge
       id: update-build-status-badge
+      if: ${{ always() }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
-        badge-type: 'PASSING'
+        badge-type: ${{ contains(steps.build-solution.outcome,'success') && 'PASSING' || 'FAILING' }}
         label: 'build'
-
+  
     # If new build status badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
     - name: Save Build Status Badge File
       id: save-build-status-badge-file
+      if: ${{ success() && steps.update-build-status-badge.outcome == 'success' }}
       run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_BUILD_STATUS }}'
     
     - name: Update Build Number Badge
       id: update-build-number-badge
-      uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.1
+      if: ${{ always() }}
+      uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: 'INFORMATION'
         label: 'build #'
-        message: '${{ steps.increment-build-number.outputs.build }}'
+        message: ${{ (contains(steps.increment-build-number.outcome,'success') && contains(steps.commit-version-file.outcome,'success')) && steps.increment-build-number.outputs.build || 'N/A' }}
 
-    # The build number badge file shoule ALWAYS change as the build number is incremented with every build.
     - name: Save Build Number Badge File
       id: save-build-number-badge-file
+      if: ${{ success() && steps.update-build-number-badge.outcome == 'success' }}
       run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_BUILD_NUMBER }}'
 
-    # If new coverage badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
-    - name: Update Code Coverage Badge
-      id: update-code-coverage-badge
-      uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.1
-      with:
-        badge-type: 'WARNING'
-        label: 'Coverage'
-        message: '65%'
+    # # If new coverage badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
+    # - name: Update Code Coverage Badge
+    #   id: update-code-coverage-badge
+    #   uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
+    #   with:
+    #     badge-type: 'WARNING'
+    #     label: 'Coverage'
+    #     message: '65%'
 
-    - name: Save Code Coverage Badge File
-      id: save-code-coverage-badge-file
-      run: echo '${{ steps.update-code-coverage-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_CODE_COVERAGE }}'
+    # - name: Save Code Coverage Badge File
+      # id: save-code-coverage-badge-file
+      # run: echo '${{ steps.update-code-coverage-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_CODE_COVERAGE }}'
 
     # - name: Update Release Date Badge
     #   id: update-release-date-badge
-    #   uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.1
+    #   uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
     #   with:
     #     badge-type: 'DATESTAMP'
     #     label: 'release date'
@@ -210,7 +222,7 @@ jobs:
 
     # - name: Update Release Tag Badge
     #   id: update-release-tag-badge
-    #   uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.1
+    #   uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
     #   with:
     #     badge-type: 'INFORMATION'
     #     label: 'release tag'
@@ -222,6 +234,7 @@ jobs:
         
     # Should ALWAYS have at least one change, and that is to the build number badge file.
     - name: Commit Changes To Any Badges
+      if: ${{ always() && steps.save-build-status-badge-file.outcome == 'success' && steps.save-build-number-badge-file.outcome == 'success' }}
       run: |
         git add ${{ env.FOLDER_PATH_BADGES }}
         git commit -m "Update repo badges."
