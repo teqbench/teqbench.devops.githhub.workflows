@@ -129,7 +129,7 @@ jobs:
 
     - name: Increment Build Number
       id: increment-build-number
-      uses: teqbench/version-number-components-action@v14
+      uses: teqbench/teqbench.devops.githhub.actions.version-updater@v14
       with:
         # By specifying a release type of "BUILD", only the build number will be incremented.
         release-type: ${{ env.RELEASE_TYPE }}
