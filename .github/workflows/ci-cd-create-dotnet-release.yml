@@ -140,21 +140,21 @@ jobs:
         run: |
           echo "version-json=$(jq -c . ${{ env.VERSION_FILE }})" >> $GITHUB_OUTPUT
 
-      - name: Get Current Version Number Components
-        id: get-version-number-components
-        uses: teqbench/version-number-components-action@v13
+      - name: Increment Version Number
+        id: increment-version-number
+        uses: teqbench/teqbench.devops.githhub.actions.version-updater@v13
         with:
           release-type: ${{ needs.variables.outputs.release_type }}
           version-json: ${{ steps.read-version-file.outputs.version-json }}
           
       - name: Update Version File
         run: |
-          echo "`jq '(..|.major?) = ${{ steps.get-version-number-components.outputs.major }} | 
-          (..|.minor?) = ${{ steps.get-version-number-components.outputs.minor }} | 
-          (..|.patch?) = ${{ steps.get-version-number-components.outputs.patch }} | 
-          (..|.build?) = ${{ steps.get-version-number-components.outputs.build }} | 
-          (..|.revision?) = ${{ steps.get-version-number-components.outputs.revision }} 
-          | (..|.suffix?) = \"${{ steps.get-version-number-components.outputs.suffix }}\"' ${{ env.VERSION_FILE }}`" > ${{ env.VERSION_FILE }}
+          echo "`jq '(..|.major?) = ${{ steps.increment-version-number.outputs.major }} | 
+          (..|.minor?) = ${{ steps.increment-version-number.outputs.minor }} | 
+          (..|.patch?) = ${{ steps.increment-version-number.outputs.patch }} | 
+          (..|.build?) = ${{ steps.increment-version-number.outputs.build }} | 
+          (..|.revision?) = ${{ steps.increment-version-number.outputs.revision }} 
+          | (..|.suffix?) = \"${{ steps.increment-version-number.outputs.suffix }}\"' ${{ env.VERSION_FILE }}`" > ${{ env.VERSION_FILE }}
       
       - name: Git Config
         run: |
@@ -164,16 +164,16 @@ jobs:
       - name: Commit Changes To Version File
         run: |
           git add ${{ env.VERSION_FILE }}
-          git commit -m "Update to version ${{ steps.get-version-number-components.outputs.version }}"
+          git commit -m "Update to version ${{ steps.increment-version-number.outputs.version }}"
           git push
           
       - name: Tag & Push
         run: |
-          git tag -a ${{ steps.get-version-number-components.outputs.tag }} -m "Added tag ${{ steps.get-version-number-components.outputs.tag }}"
-          git push origin ${{ steps.get-version-number-components.outputs.tag }}
+          git tag -a ${{ steps.increment-version-number.outputs.tag }} -m "Added tag ${{ steps.increment-version-number.outputs.tag }}"
+          git push origin ${{ steps.increment-version-number.outputs.tag }}
 
       - name: Create Release & Generate Notes
-        run: gh release create ${{ steps.get-version-number-components.outputs.tag }} --generate-notes --repo ${{ env.REPOSITORY }}
+        run: gh release create ${{ steps.increment-version-number.outputs.tag }} --generate-notes --repo ${{ env.REPOSITORY }}
         env:
           GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
@@ -185,17 +185,17 @@ jobs:
               issue_number: ${{ env.EVENT_NUMBER }},
               owner: "${{ env.REPOSITORY_OWNER }}",
               repo: "${{ env.REPOSITORY_NAME }}",
-              labels: ["Release-${{ steps.get-version-number-components.outputs.tag }}"]
+              labels: ["Release-${{ steps.increment-version-number.outputs.tag }}"]
             })
             
     outputs:
       status: success()
-      major: ${{ steps.get-version-number-components.outputs.major }}
-      minor: ${{ steps.get-version-number-components.outputs.minor }}
-      patch: ${{ steps.get-version-number-components.outputs.patch }}
-      build: ${{ steps.get-version-number-components.outputs.build }}
-      revision: ${{ steps.get-version-number-components.outputs.revision }}
-      release_tag: ${{ steps.get-version-number-components.outputs.tag }}
+      major: ${{ steps.increment-version-number.outputs.major }}
+      minor: ${{ steps.increment-version-number.outputs.minor }}
+      patch: ${{ steps.increment-version-number.outputs.patch }}
+      build: ${{ steps.increment-version-number.outputs.build }}
+      revision: ${{ steps.increment-version-number.outputs.revision }}
+      release_tag: ${{ steps.increment-version-number.outputs.tag }}
             
   cleanup:
     runs-on: ubuntu-latest
