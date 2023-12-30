@@ -48,7 +48,7 @@ jobs:
     steps:
       - name: Get Mergable Field Value
         id: get_mergable_field_value
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: get
           fields: Mergable
@@ -57,7 +57,7 @@ jobs:
           
       - name: Get Release Type Field Value
         id: get_release_type_field_value
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: get
           fields: Release Type
@@ -81,7 +81,7 @@ jobs:
     steps:
       - name: Update Mergable field if NOT a PR and Mergable is NOT assigned '${{ vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}'
         if: ${{ needs.variables.outputs.MERGABLE != vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: set
           fields: Mergable
@@ -91,7 +91,7 @@ jobs:
           
       - name: Clear Release Type field if NOT a PR and Release Type has been assigned to previously
         if: ${{ needs.variables.outputs.RELEASE_TYPE != '' }}
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: clear
           fields: Release Type
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Update Status field for pull request
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: set
           fields: Status
@@ -114,7 +114,7 @@ jobs:
           
       - name: Update Mergable field if PR and Mergable is not assigned
         if: ${{ needs.variables.outputs.MERGABLE == '' }}
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: set
           fields: Mergable
@@ -124,7 +124,7 @@ jobs:
           
       - name: Update Mergable field if PR and Mergable is incorrectly assigned '${{ vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}'
         if: ${{ needs.variables.outputs.MERGABLE == vars.ORG_OPTION_MERGABLE_NON_PR_MERGING_NOT_ALLOWED }}
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: set
           fields: Mergable
@@ -169,7 +169,7 @@ jobs:
       - name: Get Mergable Field Value
         # This field value can change in the update_project_card_pull_request job. So, get it again to have the latest value.
         id: get_mergable_field_value
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: get
           fields: Mergable
@@ -202,7 +202,7 @@ jobs:
       # If pull request pre-conditions do not pass here, update project card.
       - name: Update pull request card post validation
         if: ${{ (github.event_name == 'pull_request') && (needs.validation.outputs.passed == 'false') }}
-        uses: teqbench/project-fields@v2.0.1
+        uses: teqbench/teqbench.devops.githhub.actions.project-fields@v2.0.1
         with:
           operation: set
           fields: Status
