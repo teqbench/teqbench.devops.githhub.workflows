@@ -62,6 +62,8 @@ env:
   FILE_PATH_BADGE_RELEASE_TAG: '${{ inputs.badges_folder }}/release-tag.svg'
   FILE_PATH_BADGE_DEPLOY_DATE: '${{ inputs.badges_folder }}/deploy-date.svg'
   FILE_PATH_BADGE_DEPLOY_VERSION: '${{ inputs.badges_folder }}/deploy-version.svg'
+  COVERAGE_UPPER_BOUNDARY: 75
+  COVERAGE_LOWER_BOUNDARY: 60
 
 # The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. 
 # For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
@@ -202,16 +204,24 @@ jobs:
       if: ${{ steps.run-unit-tests.outcome == 'success' }}
       uses: teqbench/teqbench.devops.githhub.actions.coverage-reader@v1.0.1
       with:
-        coverage-xml: '<coverage line-rate="0.708" branch-rate="0.5" version="1.9" timestamp="1703907994" lines-covered="17" lines-valid="24" branches-covered="2" branches-valid="4"><sources><source>/Users/ben/Development/TeqBench/GitHub/teqbench.system.data.nosql.mongodb.models/src/</source>  </sources></coverage>'
+        coverage-xml: '<coverage line-rate="0.708"></coverage>'
+
+    # coverage >=75.0 success
+    # coverage >= 60 and coverage < 75.0 warning
+    # coverage < 60 failing
+    - name: Determine Coverage Badge Type
+      id: determine-coverage-badge-type
+      run: |
+        echo: "badge-type=${{ contains(steps.get-coverage-value.outcome,'success') && (steps.get-coverage-value.outputs.coverage >= env.COVERAGE_UPPER_BOUNDARY && 'SUCCESS' || (steps.get-coverage-value.outputs.coverage < env.COVERAGE_LOWER_BOUNDARY && 'FAILURE') || 'WARNING') || 'FAILURE' }}" >> $GITHUB_OUTPUT
 
     - name: Update Coverage Badge
       id: update-coverage-badge
       if: ${{ always() }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
-        badge-type: 'INFORMATION'
+        badge-type: ${{ contains(steps.determine-coverage-badge-type.outcome,'success') && steps.determine-coverage-badge-type.badge-type || 'FAILURE' }}
         label: 'coverage'
-        message: ${{ format('{0}%', (contains(steps.increment-build-number.outcome,'success') && contains(steps.commit-version-file.outcome,'success')) && steps.get-coverage-value.outputs.coverage || 0) }}
+        message: ${{ format('{0}%', contains(steps.get-coverage-value.outcome,'success') && steps.get-coverage-value.outputs.coverage || 0) }}
 
     - name: Save Coverage Badge File
       id: save-coverage-badge-file
