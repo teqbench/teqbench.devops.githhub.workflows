@@ -119,6 +119,10 @@ jobs:
     - name: Create Badges Directory If Does Not Exist
       run: mkdir -p ${{ env.BADGES_FOLDER }}
 
+    - name: See if xq is on runner
+      id: test-xq
+      run: xq --version
+      
     - name: Get Current Version JSON From Version File
       id: get-version-json
       # use 'jq' to read json data from the version.json file
