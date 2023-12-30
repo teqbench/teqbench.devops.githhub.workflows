@@ -219,7 +219,7 @@ jobs:
       if: ${{ always() }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
-        badge-type: ${{ contains(steps.determine-coverage-badge-type.outcome,'success') && steps.determine-coverage-badge-type.badge-type || 'FAILURE' }}
+        badge-type: ${{ contains(steps.determine-coverage-badge-type.outcome,'success') && steps.determine-coverage-badge-type.outputs.badge-type || 'FAILURE' }}
         label: 'coverage'
         message: ${{ format('{0}%', contains(steps.get-coverage-value.outcome,'success') && steps.get-coverage-value.outputs.coverage || 0) }}
 
