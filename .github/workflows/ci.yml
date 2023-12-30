@@ -115,9 +115,6 @@ jobs:
     - name: Restore .NET Project Dependencies
       run: dotnet restore
 
-    - name: Create Badges Directory If Does Not Exist
-      run: mkdir -p ${{ env.FOLDER_PATH_BADGES }}
-
     - name: Get Current Version JSON From Version File
       id: get-version-json
       # use 'jq' to read json data from the version.json file
@@ -159,9 +156,7 @@ jobs:
         git commit -m "Update to version ${{ steps.increment-build-number.outputs.version }}"
 
     - name: Create Badges Directory If Does Not Exist
-      run: mkdir -p ${{ env.FOLDER_PATH_BADGES }}
-  
-          
+      run: mkdir -p ${{ env.FOLDER_PATH_BADGES }}         
 
     - name: Update Build Status Badge
       id: update-build-status-badge
