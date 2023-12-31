@@ -117,9 +117,6 @@ jobs:
     - name: Restore .NET Project Dependencies
       run: dotnet restore
 
-    - name: Create Badges Directory If Does Not Exist
-      run: mkdir -p ${{ env.FOLDER_PATH_BADGES }}
-
     - name: Get Current Version JSON From Version File
       id: get-version-json
       # use 'jq' to read json data from the version.json file
@@ -168,6 +165,9 @@ jobs:
       run: |
         git add ${{ env.FILE_PATH_VERSION }}
         git commit -m "Update to version ${{ steps.increment-build-number.outputs.version }}"
+
+    - name: Create Badges Directory If Does Not Exist
+      run: mkdir -p ${{ env.FOLDER_PATH_BADGES }}
   
     - name: Update Build Status Badge
       id: update-build-status-badge
@@ -221,7 +221,7 @@ jobs:
       with:
         badge-type: ${{ contains(steps.determine-coverage-badge-type.outcome,'success') && steps.determine-coverage-badge-type.outputs.badge-type || 'FAILURE' }}
         label: 'coverage'
-        message: ${{ format('{0}%', contains(steps.get-coverage-value.outcome,'success') && steps.get-coverage-value.outputs.coverage || 0) }}
+        message: ${{ format('{0}', contains(steps.get-coverage-value.outcome,'success') && steps.get-coverage-value.outputs.coverage-foratted || '0%') }}
 
     - name: Save Coverage Badge File
       id: save-coverage-badge-file
