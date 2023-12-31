@@ -221,7 +221,7 @@ jobs:
       if: ${{ steps.run-unit-tests.outcome == 'success' && steps.read-coverage-file.outcome == 'success' }}
       uses: teqbench/teqbench.devops.githhub.actions.coverage-reader@v2.0.0
       with:
-        coverage-xml: ${{ steps.read-coverage-file.outputs.xml }}
+        coverage-xml: '${{ steps.read-coverage-file.outputs.xml }}'
 
     # coverage >=75.0 success
     # coverage >= 60 and coverage < 75.0 warning
