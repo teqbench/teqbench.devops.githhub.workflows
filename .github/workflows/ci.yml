@@ -117,7 +117,9 @@ jobs:
         token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
     - name: list repo
-      run: ls -la
+      run: |
+        ls -la
+        ls .submodules -la
       
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
