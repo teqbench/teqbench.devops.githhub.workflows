@@ -113,6 +113,7 @@ jobs:
       with:
         repository: ${{ env.BUILD_CONFIG_REPOSITORY }}
         ref: ${{ env.BUILD_CONFIG_BRANCH }}
+        submodules: recursive
         token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
       
     - name: Setup .NET
