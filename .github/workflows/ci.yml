@@ -298,7 +298,7 @@ jobs:
         git commit -m "Update repo badges."
 
     - name: Push All Build Commits
-      if: ${{ always() && steps.commit-version-file.outcome == 'success' && steps.commit-badge-changes.outcome == 'success' }}
+      # if: ${{ always() && steps.commit-version-file.outcome == 'success' && steps.commit-badge-changes.outcome == 'success' }}
       run: |
         git push
   
