@@ -147,7 +147,7 @@ jobs:
 
     - name: Run Unit Tests
       id: run-unit-tests
-      run: dotnet test ${{ env.SRC_FOLDER }} --no-restore --verbosity normal
+      run: dotnet test --no-restore
 
     - name: Update Version File With New Build Number
       run: |
