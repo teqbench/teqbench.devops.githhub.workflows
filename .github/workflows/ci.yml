@@ -226,12 +226,9 @@ jobs:
     # coverage < 60 failing
     - name: Determine Coverage Badge Type
       id: determine-coverage-badge-type
+      # To get numeric values to compare as numbers, have to use fromJSON to force the comparison as numbers; apparently this is bug/issue in GitHub Actions as of 12/31/23.
       run: |
-        echo "steps.get-coverage-value.outcome = ${{ steps.get-coverage-value.outcome }}"
-        echo "steps.get-coverage-value.outputs.coverage = ${{ steps.get-coverage-value.outputs.coverage }}"
-        echo "env.COVERAGE_UPPER_BOUNDARY = ${{ env.COVERAGE_UPPER_BOUNDARY }}"
-        echo "steps.get-coverage-value.outputs.coverage >= ${{ env.COVERAGE_UPPER_BOUNDARY }} = ${{ steps.get-coverage-value.outputs.coverage >= env.COVERAGE_UPPER_BOUNDARY }}"
-        echo "badge-type=${{ contains(steps.get-coverage-value.outcome,'success') && (steps.get-coverage-value.outputs.coverage >= env.COVERAGE_UPPER_BOUNDARY) && 'SUCCESS' || 'FAILURE' }}" >> $GITHUB_OUTPUT
+        echo "badge-type=${{ contains(steps.get-coverage-value.outcome,'success') && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && 'SUCCESS' || 'FAILURE' }}" >> $GITHUB_OUTPUT
 
     - name: Update Coverage Badge
       id: update-coverage-badge
