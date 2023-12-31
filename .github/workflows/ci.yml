@@ -227,6 +227,8 @@ jobs:
     - name: Determine Coverage Badge Type
       id: determine-coverage-badge-type
       run: |
+        echo "steps.get-coverage-value.outcome = ${{ steps.get-coverage-value.outcome }}"
+        echo "steps.get-coverage-value.outputs.coverage >= ${{ env.COVERAGE_UPPER_BOUNDARY }} = ${{ steps.get-coverage-value.outputs.coverage >= env.COVERAGE_UPPER_BOUNDARY }}"
         echo "badge-type=${{ contains(steps.get-coverage-value.outcome,'success') && (steps.get-coverage-value.outputs.coverage >= env.COVERAGE_UPPER_BOUNDARY) && 'SUCCESS' || 'FAILURE' }}" >> $GITHUB_OUTPUT
 
     - name: Update Coverage Badge
