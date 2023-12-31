@@ -115,6 +115,9 @@ jobs:
         ref: ${{ env.BUILD_CONFIG_BRANCH }}
         submodules: recursive
         token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
+
+    - name: list repo
+      run: ls -la
       
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
