@@ -212,7 +212,7 @@ jobs:
       if: ${{ steps.run-unit-tests.outcome == 'success' }}
       run: |
         xml=$(<${{ env.FOLDER_PATH_COVERAGE }}/coverage.cobertura.xml)
-        echo '$xml' >> $GITHUB_OUTPUT
+        echo $xml >> $GITHUB_OUTPUT
 
     # pass coverage xml to action to get coverage %
     - name: Get Coverage Value
