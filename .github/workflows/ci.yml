@@ -43,6 +43,12 @@ on:
         description: "The folder for the repo's badges."
         type: string
         default: './.badges'
+      
+      coverage_folder:
+        description: "The folder for the repo's coverage data and reports."
+        type: string
+        default: './.coverage'
+
 
 env:
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
@@ -54,6 +60,7 @@ env:
   BUILD_CONFIG_REPOSITORY_NAME: ${{ inputs.repository_name }}
   FOLDER_PATH_SOURCE: ${{ inputs.project_source_folder }}    
   FOLDER_PATH_BADGES: '${{ inputs.badges_folder }}'
+  FOLDER_PATH_COVERAGE: '${{ inputs.coverage_folder }}'
   FILE_PATH_VERSION: '${{ inputs.project_source_folder }}/version.json'    
   FILE_PATH_BADGE_BUILD_STATUS: '${{ inputs.badges_folder }}/build-status.svg'
   FILE_PATH_BADGE_BUILD_NUMBER: '${{ inputs.badges_folder }}/build-number.svg'
@@ -197,14 +204,21 @@ jobs:
       if: ${{ always() && steps.update-build-number-badge.outcome == 'success' }}
       run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_BUILD_NUMBER }}'
 
-    # read coverage xml from file
+    # Read coverage xml from file
+    - name: Read Coverage File
+      id: read-coverage-file
+      if: ${{ steps.run-unit-tests.outcome == 'success' }}
+      run: |
+        xml=$(<${{ env.FOLDER_PATH_COVERAGE }}/coverage.cobertura.xml)
+        echo '$xml' >> $GITHUB_OUTPUT
+
     # pass coverage xml to action to get coverage %
     - name: Get Coverage Value
       id: get-coverage-value
-      if: ${{ steps.run-unit-tests.outcome == 'success' }}
+      if: ${{ steps.run-unit-tests.outcome == 'success' && steps.read-coverage-file.outcome == 'success' }}
       uses: teqbench/teqbench.devops.githhub.actions.coverage-reader@v2.0.0
       with:
-        coverage-xml: '<coverage line-rate="0.9999"></coverage>'
+        coverage-xml: ${{ steps.read-coverage-file.outputs.xml }}
 
     # coverage >=75.0 success
     # coverage >= 60 and coverage < 75.0 warning
