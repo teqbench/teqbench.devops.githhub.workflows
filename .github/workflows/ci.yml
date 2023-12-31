@@ -202,7 +202,7 @@ jobs:
     - name: Get Coverage Value
       id: get-coverage-value
       if: ${{ steps.run-unit-tests.outcome == 'success' }}
-      uses: teqbench/teqbench.devops.githhub.actions.coverage-reader@v1.0.1
+      uses: teqbench/teqbench.devops.githhub.actions.coverage-reader@v2.0.0
       with:
         coverage-xml: '<coverage line-rate="0.591"></coverage>'
 
