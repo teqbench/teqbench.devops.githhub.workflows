@@ -299,6 +299,7 @@ jobs:
 
     - name: Push All Build Commits
       # if: ${{ always() && steps.commit-version-file.outcome == 'success' && steps.commit-badge-changes.outcome == 'success' }}
+      if: ${{ always() }}      
       run: |
         git push
   
