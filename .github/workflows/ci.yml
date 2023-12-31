@@ -116,11 +116,6 @@ jobs:
         submodules: recursive
         token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
-    - name: list repo
-      run: |
-        ls -la
-        ls .submodules/teqbench.dev -la
-      
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
@@ -157,7 +152,7 @@ jobs:
     - name: Run Unit Tests
       id: run-unit-tests
       if: ${{ success() }}
-      run: dotnet test ${{ env.FOLDER_PATH_SOURCE }} --no-restore --verbosity normal
+      run: dotnet test --no-restore
 
     # Always update the version file with new build number, even if build fails, and if the increment build number step was successful.
     - name: Update Version File With New Build Number
