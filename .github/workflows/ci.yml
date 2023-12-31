@@ -219,7 +219,7 @@ jobs:
     - name: Get Coverage Value
       id: get-coverage-value
       if: ${{ steps.run-unit-tests.outcome == 'success' && steps.read-coverage-file.outcome == 'success' }}
-      uses: teqbench/teqbench.devops.githhub.actions.coverage-reader@v2.0.0
+      uses: teqbench/teqbench.devops.githhub.actions.coverage-reader@v2.0.1
       with:
         coverage-xml: '${{ steps.read-coverage-file.outputs.xml }}'
 
