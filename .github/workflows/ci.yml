@@ -19,6 +19,11 @@ on:
         type: string
         default: ${{ github.event.repository.name }}
 
+      ci_type:
+        description: "CI type to perform; build , build-release, build-release-deploy. Default setting: 'build'"
+        type: string
+        default: 'build'
+
       # resource_url:
       #   type: string
       #   description: "The URL of the issue/PR to get or update"
@@ -35,22 +40,22 @@ on:
       #   required: true
 
       project_source_folder:
-        description: "The folder the project to be packaged as NuGet package is located."
+        description: "The folder the project to be packaged as NuGet package is located. Default setting: './src'"
         type: string
         default: './src'
         
       badges_folder:
-        description: "The folder for the repo's badges."
+        description: "The folder for the repo's badges. Default setting: './.badges'"
         type: string
         default: './.badges'
       
       coverage_folder:
-        description: "The folder for the repo's coverage data and reports."
+        description: "The folder for the repo's coverage data and reports Default setting: './coverage'"
         type: string
         default: './.coverage'
 
-
 env:
+  CI_TYPE: ${{ inputs.repository }}
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
   BUILD_CONFIG_NAME: 'Release'
   BUILD_CONFIG_RELEASE_TYPE: 'BUILD'
@@ -90,7 +95,17 @@ jobs:
   #         echo "This CI/CD workflow requires the pull request be merged in order to proceed."
   #         echo "Exiting workflow."
   #         exit 1
-    
+  ci_type_check:
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Validate CI Type
+      if: ${{ env.CI_TYPE == 'build' || env.CI_TYPE == 'build-release' || env.CI_TYPE == 'build-release-deploy' }}
+      run: |
+        echo "Specified CI type is not valid."
+        echo "Valid options are: build, build-release, build-release-deploy"
+        echo "Exiting workflow."
+        exit 1
+
   build-and-test:
     # needs: merge_check
     runs-on: ubuntu-latest
@@ -244,45 +259,61 @@ jobs:
       if: ${{ always() && steps.update-coverage-badge.outcome == 'success' }}
       run: echo '${{ steps.update-coverage-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_COVERAGE }}'
           
-    # update coverage badge
-    # save coverage badge
+    - name: Update Release Tag Badge
+      id: update-release-tag-badge
+      if: ${{ contains(env.CI_TYPE,'build-release') || contains(env.CI_TYPE,'build-release-deploy') }}
+      uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
+      with:
+        badge-type: 'INFORMATION'
+        label: 'release tag'
+        message: '${{ steps.increment-build-number.outputs.tag }}'
 
-    # # If new coverage badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
-    # - name: Update Code Coverage Badge
-    #   id: update-code-coverage-badge
-    #   uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
-    #   with:
-    #     badge-type: 'WARNING'
-    #     label: 'Coverage'
-    #     message: '65%'
+    - name: Save Release Tag Badge File
+      id: save-release-tag-badge-file
+      if: ${{ steps.update-release-tag-badge.outcome == 'success' }}
+      run: echo '${{ steps.update-release-tag-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_RELEASE_TAG }}'
 
-    # - name: Save Code Coverage Badge File
-      # id: save-code-coverage-badge-file
-      # run: echo '${{ steps.update-code-coverage-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_COVERAGE }}'
+    - name: Update Release Date Badge
+      id: update-release-date-badge
+      if: ${{ env.CI_TYPE == 'build-release' || env.CI_TYPE == 'build-release-deploy' }}
+      uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
+      with:
+        badge-type: 'DATESTAMP'
+        label: 'released'
+        datestamp-timezone: 'US/Mountain'
 
-    # - name: Update Release Date Badge
-    #   id: update-release-date-badge
-    #   uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
-    #   with:
-    #     badge-type: 'DATESTAMP'
-    #     label: 'release date'
-    #     datestamp-timezone: 'US/Mountain'
-        
-    # - name: Save Release Date Badge File
-    #   id: save-release-date-badge-file
-    #   run: echo '${{ steps.update-release-date-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_RELEASE_TAG }}'
+    - name: Save Release Date Badge File
+      id: save-release-date-badge-file
+      if: ${{ steps.update-release-date-badge.outcome == 'success' }}
+      run: echo '${{ steps.update-release-date-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_RELEASE_DATE }}'
 
-    # - name: Update Release Tag Badge
-    #   id: update-release-tag-badge
-    #   uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
-    #   with:
-    #     badge-type: 'INFORMATION'
-    #     label: 'release tag'
-    #     message: '${{ steps.increment-build-number.outputs.tag }}'
-        
-    # - name: Save Release Tag Badge File
-    #   id: save-release-tag-badge-file
-    #   run: echo '${{ steps.update-release-tag-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_RELEASE_DATE }}'      
+    - name: Update Deploy Version Badge
+      id: update-deploy-version-badge
+      if: ${{ env.CI_TYPE == 'build-release-deploy' }}
+      uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
+      with:
+        badge-type: 'INFORMATION'
+        label: 'deploy version'
+        message: '${{ steps.increment-build-number.outputs.version }}'
+
+    - name: Save Deploy Version Badge File
+      id: save-deploy-version-badge-file
+      if: ${{ steps.update-deploy-version-badge.outcome == 'success' }}
+      run: echo '${{ steps.update-deploy-version-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_DEPLOY_VERSION }}'
+      
+    - name: Update Deploy Date Badge
+      id: update-deploy-date-badge
+      if: ${{ env.CI_TYPE == 'build-release-deploy' }}
+      uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
+      with:
+        badge-type: 'DATESTAMP'
+        label: 'released'
+        datestamp-timezone: 'US/Mountain'
+
+    - name: Save Deploy Date Badge File
+      id: save-deploy-date-badge-file
+      if: ${{ steps.update-deploy-date-badge.outcome == 'success' }}
+      run: echo '${{ steps.update-deploy-date-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_DEPLOY_DATE }}'       
         
     # Should ALWAYS have at least one change, and that is to the build number badge file.
     - name: Commit Badge Changes
