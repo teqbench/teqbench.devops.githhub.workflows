@@ -348,7 +348,7 @@ jobs:
       id: tag-push-release-deployment-commits
       if: ${{ always() && (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (steps.commit-version-file.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-changes.outcome == env.OUTCOME_SUCCESS) }}
       run: |
-        git tag -a ${{ steps.increment-version-number.outputs.tag }} -m "Added tag ${{ steps.increment-version-number.outputs.tag }}"
+        git tag -a ${{ steps.increment-version-number.outputs.tag }} -m "Added tag ${{ steps.increment-version-number.outputs.tag }}, the specified CI type is '${{ env.CI_TYPE }}'."
         git push origin ${{ steps.increment-version-number.outputs.tag }}
 
     - name: Create Release & Generate Notes
