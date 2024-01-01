@@ -55,31 +55,28 @@ on:
         default: './.coverage'
 
 env:
-  CI_TYPE: ${{ inputs.ci_type }}
-  CI_TYPE_OPTION_BUILD: 'build'
-  CI_TYPE_OPTION_BUILD_RELEASE: 'build-release'
-  CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY: 'build-release-deploy'
+  # Env vars based on input values
+  INPUT_CI_TYPE: ${{ inputs.ci_type }}
+  INPUT_BUILD_CONFIG_REPOSITORY: ${{ inputs.repository }}
+  INPUT_BUILD_CONFIG_REPOSITORY_OWNER: ${{ inputs.repository_owner }}
+  INPUT_BUILD_CONFIG_REPOSITORY_NAME: ${{ inputs.repository_name }}
+  INPUT_FOLDER_PATH_SOURCE: ${{ inputs.project_source_folder }}    
+  INPUT_FOLDER_PATH_BADGES: '${{ inputs.badges_folder }}'
+  INPUT_FOLDER_PATH_COVERAGE: '${{ inputs.coverage_folder }}'
+  INPUT_FILE_PATH_VERSION: '${{ inputs.project_source_folder }}/version.json'    
+  INPUT_FILE_PATH_BADGE_BUILD_STATUS: '${{ inputs.badges_folder }}/build-status.svg'
+  INPUT_FILE_PATH_BADGE_BUILD_NUMBER: '${{ inputs.badges_folder }}/build-number.svg'
+  INPUT_FILE_PATH_BADGE_COVERAGE: '${{ inputs.badges_folder }}/code-coverage.svg'
+  INPUT_FILE_PATH_BADGE_RELEASE_DATE: '${{ inputs.badges_folder }}/release-date.svg'
+  INPUT_FILE_PATH_BADGE_RELEASE_TAG: '${{ inputs.badges_folder }}/release-tag.svg'
+  INPUT_FILE_PATH_BADGE_DEPLOY_DATE: '${{ inputs.badges_folder }}/deploy-date.svg'
+  INPUT_FILE_PATH_BADGE_DEPLOY_VERSION: '${{ inputs.badges_folder }}/deploy-version.svg'
+
+  # Env vars without input var values.
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
   BUILD_CONFIG_NAME: 'Release'
-  BUILD_CONFIG_RELEASE_TYPE: 'BUILD'
-  BUILD_CONFIG_REPOSITORY: ${{ inputs.repository }}
+  BUILD_CONFIG_RELEASE_TYPE: 'BUILD'  
   BUILD_CONFIG_BRANCH: 'main'
-  BUILD_CONFIG_REPOSITORY_OWNER: ${{ inputs.repository_owner }}
-  BUILD_CONFIG_REPOSITORY_NAME: ${{ inputs.repository_name }}
-  FOLDER_PATH_SOURCE: ${{ inputs.project_source_folder }}    
-  FOLDER_PATH_BADGES: '${{ inputs.badges_folder }}'
-  FOLDER_PATH_COVERAGE: '${{ inputs.coverage_folder }}'
-  FILE_PATH_VERSION: '${{ inputs.project_source_folder }}/version.json'    
-  FILE_PATH_BADGE_BUILD_STATUS: '${{ inputs.badges_folder }}/build-status.svg'
-  FILE_PATH_BADGE_BUILD_NUMBER: '${{ inputs.badges_folder }}/build-number.svg'
-  FILE_PATH_BADGE_COVERAGE: '${{ inputs.badges_folder }}/code-coverage.svg'
-  FILE_PATH_BADGE_RELEASE_DATE: '${{ inputs.badges_folder }}/release-date.svg'
-  FILE_PATH_BADGE_RELEASE_TAG: '${{ inputs.badges_folder }}/release-tag.svg'
-  FILE_PATH_BADGE_DEPLOY_DATE: '${{ inputs.badges_folder }}/deploy-date.svg'
-  FILE_PATH_BADGE_DEPLOY_VERSION: '${{ inputs.badges_folder }}/deploy-version.svg'
-  COVERAGE_UPPER_BOUNDARY: 75
-  COVERAGE_LOWER_BOUNDARY: 60
-  OUTCOME_SUCCESS: 'success'
   BADGE_TYPE_INFORMATION: 'INFORMATION'
   BADGE_TYPE_WARNING: 'WARNING'
   BADGE_TYPE_SUCCESS: 'SUCCESS'
@@ -94,6 +91,12 @@ env:
   BADGE_LABEL_RELEASE_DATE: 'released'
   BADGE_LABEL_DEPLOY_VERSION: 'deploy version'
   BADGE_LABEL_DEPLOY_DATE: 'deployed'
+  CI_TYPE_OPTION_BUILD: 'build'
+  CI_TYPE_OPTION_BUILD_RELEASE: 'build-release'
+  CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY: 'build-release-deploy'
+  COVERAGE_UPPER_BOUNDARY: 75
+  COVERAGE_LOWER_BOUNDARY: 60
+  OUTCOME_SUCCESS: 'success'
 
 # The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. 
 # For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
@@ -117,10 +120,10 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
     - name: Validate CI Type
-      if: ${{ env.CI_TYPE != env.CI_TYPE_OPTION_BUILD && env.CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE && env.CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
+      if: ${{ env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD && env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE && env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
       run: |
         echo "Specified CI type is not valid."
-        echo "Valid options are: ${{ env.env.CI_TYPE_OPTION_BUILD }}, ${{ env.env.CI_TYPE_OPTION_BUILD_RELEASE }}, ${{ env.env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}"
+        echo "Valid options are: ${{ env.CI_TYPE_OPTION_BUILD }}, ${{ env.CI_TYPE_OPTION_BUILD_RELEASE }}, ${{ env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}"
         echo "Exiting workflow."
         exit 1
 
@@ -145,7 +148,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
       with:
-        repository: ${{ env.BUILD_CONFIG_REPOSITORY }}
+        repository: ${{ env.INPUT_BUILD_CONFIG_REPOSITORY }}
         ref: ${{ env.BUILD_CONFIG_BRANCH }}
         submodules: recursive
         token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
@@ -165,7 +168,7 @@ jobs:
       # -c means to compact the output stream data instead of the default 'pretty-print' behavior
       # . is the identity operator and it copies the input of the jq processor to the output stream
       run: |
-        echo "version-json=$(jq -c . ${{ env.FILE_PATH_VERSION }})" >> $GITHUB_OUTPUT
+        echo "version-json=$(jq -c . ${{ env.INPUT_FILE_PATH_VERSION }})" >> $GITHUB_OUTPUT
 
     # Increment the build number BEFORE building the solution so have the updated version number components to pass as parameters.
     - name: Increment Version Number
@@ -198,19 +201,19 @@ jobs:
         (..|.patch?) = ${{ steps.increment-version-number.outputs.patch }} | 
         (..|.build?) = ${{ steps.increment-version-number.outputs.build }} | 
         (..|.revision?) = ${{ steps.increment-version-number.outputs.revision }} 
-        | (..|.suffix?) = \"${{ steps.increment-version-number.outputs.suffix }}\"' ${{ env.FILE_PATH_VERSION }}`" > ${{ env.FILE_PATH_VERSION }}
+        | (..|.suffix?) = \"${{ steps.increment-version-number.outputs.suffix }}\"' ${{ env.INPUT_FILE_PATH_VERSION }}`" > ${{ env.INPUT_FILE_PATH_VERSION }}
 
     # Always commit the version file with new build number, even if build fails, and if the update version file step was successful.
     - name: Commit Changes To Version File
       id: commit-version-file
       if: ${{ always() && steps.update-version-file.outcome == env.OUTCOME_SUCCESS }}
       run: |
-        git add ${{ env.FILE_PATH_VERSION }}
+        git add ${{ env.INPUT_FILE_PATH_VERSION }}
         git commit -m "Update to version ${{ steps.increment-version-number.outputs.version }}"
 
     - name: Create Badges Directory If Does Not Exist
       if: ${{ always() }}
-      run: mkdir -p ${{ env.FOLDER_PATH_BADGES }}
+      run: mkdir -p ${{ env.INPUT_FOLDER_PATH_BADGES }}
   
     - name: Update Build Status Badge
       id: update-build-status-badge
@@ -224,7 +227,7 @@ jobs:
     - name: Save Build Status Badge File
       id: save-build-status-badge-file
       if: ${{ always() && steps.update-build-status-badge.outcome == env.OUTCOME_SUCCESS }}
-      run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_BUILD_STATUS }}'
+      run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_BUILD_STATUS }}'
     
     - name: Update Build Number Badge
       id: update-build-number-badge
@@ -238,14 +241,14 @@ jobs:
     - name: Save Build Number Badge File
       id: save-build-number-badge-file
       if: ${{ always() && steps.update-build-number-badge.outcome == env.OUTCOME_SUCCESS }}
-      run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_BUILD_NUMBER }}'
+      run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_BUILD_NUMBER }}'
 
     # Read coverage XML from file
     - name: Read Coverage File
       id: read-coverage-file
       if: ${{ steps.run-unit-tests.outcome == env.OUTCOME_SUCCESS }}
       run: |
-        echo xml=$(<${{ env.FOLDER_PATH_COVERAGE }}/coverage.cobertura.xml) >> $GITHUB_OUTPUT
+        echo xml=$(<${{ env.INPUT_FOLDER_PATH_COVERAGE }}/coverage.cobertura.xml) >> $GITHUB_OUTPUT
 
     # Pass coverage XML to action to get coverage %
     - name: Get Coverage Value
@@ -276,11 +279,11 @@ jobs:
     - name: Save Coverage Badge File
       id: save-coverage-badge-file
       if: ${{ always() && steps.update-coverage-badge.outcome == env.OUTCOME_SUCCESS }}
-      run: echo '${{ steps.update-coverage-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_COVERAGE }}'
+      run: echo '${{ steps.update-coverage-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_COVERAGE }}'
           
     - name: Update Release Tag Badge
       id: update-release-tag-badge
-      if: ${{ always() && (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE) || (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) }}
+      if: ${{ always() && (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE) || (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: ${{ env.BADGE_TYPE_INFORMATION }}
@@ -290,11 +293,11 @@ jobs:
     - name: Save Release Tag Badge File
       id: save-release-tag-badge-file
       if: ${{ always() && steps.update-release-tag-badge.outcome == env.OUTCOME_SUCCESS }}
-      run: echo '${{ steps.update-release-tag-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_RELEASE_TAG }}'
+      run: echo '${{ steps.update-release-tag-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_RELEASE_TAG }}'
 
     - name: Update Release Date Badge
       id: update-release-date-badge
-      if: ${{ always() && env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
+      if: ${{ always() && env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: ${{ env.BADGE_TYPE_DATESTAMP }}
@@ -304,11 +307,11 @@ jobs:
     - name: Save Release Date Badge File
       id: save-release-date-badge-file
       if: ${{ always() && steps.update-release-date-badge.outcome == env.OUTCOME_SUCCESS }}
-      run: echo '${{ steps.update-release-date-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_RELEASE_DATE }}'
+      run: echo '${{ steps.update-release-date-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_RELEASE_DATE }}'
 
     - name: Update Deploy Version Badge
       id: update-deploy-version-badge
-      if: ${{ always() && env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
+      if: ${{ always() && env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: ${{ env.BADGE_TYPE_INFORMATION }}
@@ -318,11 +321,11 @@ jobs:
     - name: Save Deploy Version Badge File
       id: save-deploy-version-badge-file
       if: ${{ always() && steps.update-deploy-version-badge.outcome == env.OUTCOME_SUCCESS }}
-      run: echo '${{ steps.update-deploy-version-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_DEPLOY_VERSION }}'
+      run: echo '${{ steps.update-deploy-version-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_DEPLOY_VERSION }}'
       
     - name: Update Deploy Date Badge
       id: update-deploy-date-badge
-      if: ${{ always() && env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
+      if: ${{ always() && env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: ${{ env.BADGE_TYPE_DATESTAMP }}
@@ -332,29 +335,29 @@ jobs:
     - name: Save Deploy Date Badge File
       id: save-deploy-date-badge-file
       if: ${{ always() && steps.update-deploy-date-badge.outcome == env.OUTCOME_SUCCESS }}
-      run: echo '${{ steps.update-deploy-date-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_DEPLOY_DATE }}'       
+      run: echo '${{ steps.update-deploy-date-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_DEPLOY_DATE }}'       
         
     # Should ALWAYS have at least one change, and that is to the build number badge file.
     - name: Commit Badge Changes
       id: commit-badge-changes
       if: ${{ always() && steps.save-build-status-badge-file.outcome == env.OUTCOME_SUCCESS && steps.save-build-number-badge-file.outcome == env.OUTCOME_SUCCESS }}
       run: |
-        git add ${{ env.FOLDER_PATH_BADGES }}
+        git add ${{ env.INPUT_FOLDER_PATH_BADGES }}
         git commit -m "Update repo badges."
 
     # ONLY tag and push when all prior steps (which were not skippedd) ran succesfully.
     # BV - 1/1/24, FOR NOW, JUST DO ALWAYS BUT NEED TO CHANGE TO success()
     - name: Tag & Push Release/Deployment Commits
       id: tag-push-release-deployment-commits
-      if: ${{ always() && (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (steps.commit-version-file.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-changes.outcome == env.OUTCOME_SUCCESS) }}
+      if: ${{ always() && (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (steps.commit-version-file.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-changes.outcome == env.OUTCOME_SUCCESS) }}
       run: |
-        git tag -a ${{ steps.increment-version-number.outputs.tag }} -m "Added tag ${{ steps.increment-version-number.outputs.tag }}, the specified CI type is '${{ env.CI_TYPE }}'."
+        git tag -a ${{ steps.increment-version-number.outputs.tag }} -m "Added tag ${{ steps.increment-version-number.outputs.tag }}, the specified CI type is '${{ env.INPUT_CI_TYPE }}'."
         git push origin ${{ steps.increment-version-number.outputs.tag }}
 
     - name: Create Release & Generate Notes
       id: create-release
       if: ${{ always() && steps.tag-push-release-deployment-commits.outcome == env.OUTCOME_SUCCESS }}
-      run: gh release create ${{ steps.increment-version-number.outputs.tag }} --generate-notes --repo ${{ env.BUILD_CONFIG_REPOSITORY }}
+      run: gh release create ${{ steps.increment-version-number.outputs.tag }} --generate-notes --repo ${{ env.INPUT_BUILD_CONFIG_REPOSITORY }}
       env:
         GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
@@ -365,14 +368,14 @@ jobs:
         script: |
           github.rest.issues.addLabels({
             issue_number: ${{ env.EVENT_NUMBER }},
-            owner: "${{ env.BUILD_CONFIG_REPOSITORY_OWNER }}",
-            repo: "${{ env.BUILD_CONFIG_REPOSITORY_NAME }}",
+            owner: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_OWNER }}",
+            repo: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_NAME }}",
             labels: ["Release-${{ steps.increment-version-number.outputs.tag }}"]
           })
             
     # Always push when the CI type is 'build'
     - name: Push Build Commits
-      if: ${{ always() && (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD) && (steps.commit-version-file.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-changes.outcome == env.OUTCOME_SUCCESS) }}
+      if: ${{ always() && (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD) && (steps.commit-version-file.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-changes.outcome == env.OUTCOME_SUCCESS) }}
       run: |
         git push
   
