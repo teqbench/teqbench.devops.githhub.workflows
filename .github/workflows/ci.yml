@@ -55,7 +55,7 @@ on:
         default: './.coverage'
 
 env:
-  CI_TYPE: ${{ inputs.repository }}
+  CI_TYPE: ${{ inputs.ci_type }}
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
   BUILD_CONFIG_NAME: 'Release'
   BUILD_CONFIG_RELEASE_TYPE: 'BUILD'
