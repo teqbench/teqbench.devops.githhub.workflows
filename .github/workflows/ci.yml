@@ -345,11 +345,31 @@ jobs:
     # ONLY tag and push when all prior steps (which were not skippedd) ran succesfully.
     # BV - 1/1/24, FOR NOW, JUST DO ALWAYS BUT NEED TO CHANGE TO success()
     - name: Tag & Push Release/Deployment Commits
+      id: tag-push-release-deployment-commits
       if: ${{ always() && (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (steps.commit-version-file.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-changes.outcome == env.OUTCOME_SUCCESS) }}
       run: |
         git tag -a ${{ steps.increment-version-number.outputs.tag }} -m "Added tag ${{ steps.increment-version-number.outputs.tag }}"
         git push origin ${{ steps.increment-version-number.outputs.tag }}
 
+    - name: Create Release & Generate Notes
+      id: create-release
+      if: ${{ always() && steps.tag-push-release-deployment-commits.outcome == env.OUTCOME_SUCCESS }}
+      run: gh release create ${{ steps.increment-version-number.outputs.tag }} --generate-notes --repo ${{ env.REPOSITORY }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
+
+    - name: Assign Release Label
+      if: ${{ always() && steps.create-release.outcome == env.OUTCOME_SUCCESS }}
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.addLabels({
+            issue_number: ${{ env.EVENT_NUMBER }},
+            owner: "${{ env.BUILD_CONFIG_REPOSITORY_OWNER }}",
+            repo: "${{ env.BUILD_CONFIG_REPOSITORY_NAME }}",
+            labels: ["Release-${{ steps.increment-version-number.outputs.tag }}"]
+          })
+            
     # Always push when the CI type is 'build'
     - name: Push Build Commits
       if: ${{ always() && (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD) && (steps.commit-version-file.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-changes.outcome == env.OUTCOME_SUCCESS) }}
