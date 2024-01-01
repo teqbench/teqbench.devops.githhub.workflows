@@ -348,8 +348,7 @@ jobs:
       if: ${{ always() && (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (steps.commit-version-file.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-changes.outcome == env.OUTCOME_SUCCESS) }}
       run: |
         git tag -a ${{ steps.increment-version-number.outputs.tag }} -m "Added tag ${{ steps.increment-version-number.outputs.tag }}"
-        git push
-        # git push origin ${{ steps.increment-version-number.outputs.tag }}
+        git push origin ${{ steps.increment-version-number.outputs.tag }}
 
     # Always push when the CI type is 'build'
     - name: Push Build Commits
