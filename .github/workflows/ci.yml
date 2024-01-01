@@ -280,7 +280,7 @@ jobs:
           
     - name: Update Release Tag Badge
       id: update-release-tag-badge
-      if: ${{ contains(env.CI_TYPE,env.CI_TYPE_OPTION_BUILD_RELEASE) || contains(env.CI_TYPE,env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) }}
+      if: ${{ (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE) || (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: ${{ env.BADGE_TYPE_INFORMATION }}
