@@ -120,7 +120,7 @@ jobs:
       if: ${{ env.CI_TYPE != env.CI_TYPE_OPTION_BUILD && env.CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE && env.CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
       run: |
         echo "Specified CI type is not valid."
-        echo "Valid options are: build, build-release, build-release-deploy"
+        echo "Valid options are: ${{ env.env.CI_TYPE_OPTION_BUILD }}, ${{ env.env.CI_TYPE_OPTION_BUILD_RELEASE }}, ${{ env.env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}"
         echo "Exiting workflow."
         exit 1
 
