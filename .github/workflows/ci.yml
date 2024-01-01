@@ -95,7 +95,7 @@ jobs:
   #         echo "This CI/CD workflow requires the pull request be merged in order to proceed."
   #         echo "Exiting workflow."
   #         exit 1
-  ci_type_check:
+  validate-ci-type:
     runs-on: ubuntu-latest
     steps: 
     - name: Validate CI Type
@@ -110,7 +110,7 @@ jobs:
     # needs: merge_check
     runs-on: ubuntu-latest
     # needs: variables
-    needs: ci_type_check
+    needs: validate-ci-type
 
     permissions:
       contents: write
