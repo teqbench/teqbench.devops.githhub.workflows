@@ -22,7 +22,7 @@ on:
       ci_type:
         description: "CI type to perform; build , build-release, build-release-deploy. Default setting: 'build'"
         type: string
-        default: 'build'
+        default: 'build-release-deploy'
 
       # resource_url:
       #   type: string
