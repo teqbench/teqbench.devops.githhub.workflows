@@ -354,7 +354,7 @@ jobs:
     - name: Create Release & Generate Notes
       id: create-release
       if: ${{ always() && steps.tag-push-release-deployment-commits.outcome == env.OUTCOME_SUCCESS }}
-      run: gh release create ${{ steps.increment-version-number.outputs.tag }} --generate-notes --repo ${{ env.REPOSITORY }}
+      run: gh release create ${{ steps.increment-version-number.outputs.tag }} --generate-notes --repo ${{ env.BUILD_CONFIG_REPOSITORY }}
       env:
         GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
