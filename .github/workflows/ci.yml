@@ -280,7 +280,7 @@ jobs:
           
     - name: Update Release Tag Badge
       id: update-release-tag-badge
-      if: ${{ (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE) || (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) }}
+      if: ${{ always() && (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE) || (env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: ${{ env.BADGE_TYPE_INFORMATION }}
@@ -289,12 +289,12 @@ jobs:
 
     - name: Save Release Tag Badge File
       id: save-release-tag-badge-file
-      if: ${{ steps.update-release-tag-badge.outcome == env.OUTCOME_SUCCESS }}
+      if: ${{ always() && steps.update-release-tag-badge.outcome == env.OUTCOME_SUCCESS }}
       run: echo '${{ steps.update-release-tag-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_RELEASE_TAG }}'
 
     - name: Update Release Date Badge
       id: update-release-date-badge
-      if: ${{ env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
+      if: ${{ always() && env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: ${{ env.BADGE_TYPE_DATESTAMP }}
@@ -303,12 +303,12 @@ jobs:
 
     - name: Save Release Date Badge File
       id: save-release-date-badge-file
-      if: ${{ steps.update-release-date-badge.outcome == env.OUTCOME_SUCCESS }}
+      if: ${{ always() && steps.update-release-date-badge.outcome == env.OUTCOME_SUCCESS }}
       run: echo '${{ steps.update-release-date-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_RELEASE_DATE }}'
 
     - name: Update Deploy Version Badge
       id: update-deploy-version-badge
-      if: ${{ env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
+      if: ${{ always() && env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: ${{ env.BADGE_TYPE_INFORMATION }}
@@ -317,12 +317,12 @@ jobs:
 
     - name: Save Deploy Version Badge File
       id: save-deploy-version-badge-file
-      if: ${{ steps.update-deploy-version-badge.outcome == env.OUTCOME_SUCCESS }}
+      if: ${{ always() && steps.update-deploy-version-badge.outcome == env.OUTCOME_SUCCESS }}
       run: echo '${{ steps.update-deploy-version-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_DEPLOY_VERSION }}'
       
     - name: Update Deploy Date Badge
       id: update-deploy-date-badge
-      if: ${{ env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
+      if: ${{ always() && env.CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
         badge-type: ${{ env.BADGE_TYPE_DATESTAMP }}
@@ -331,7 +331,7 @@ jobs:
 
     - name: Save Deploy Date Badge File
       id: save-deploy-date-badge-file
-      if: ${{ steps.update-deploy-date-badge.outcome == env.OUTCOME_SUCCESS }}
+      if: ${{ always() && steps.update-deploy-date-badge.outcome == env.OUTCOME_SUCCESS }}
       run: echo '${{ steps.update-deploy-date-badge.outputs.svg }}' > '${{ env.FILE_PATH_BADGE_DEPLOY_DATE }}'       
         
     # Should ALWAYS have at least one change, and that is to the build number badge file.
