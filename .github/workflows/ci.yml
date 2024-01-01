@@ -99,7 +99,7 @@ jobs:
     runs-on: ubuntu-latest
     steps: 
     - name: Validate CI Type
-      if: ${{ env.CI_TYPE == 'build' || env.CI_TYPE == 'build-release' || env.CI_TYPE == 'build-release-deploy' }}
+      if: ${{ env.CI_TYPE != 'build' && env.CI_TYPE != 'build-release' && env.CI_TYPE != 'build-release-deploy' }}
       run: |
         echo "Specified CI type is not valid."
         echo "Valid options are: build, build-release, build-release-deploy"
@@ -110,6 +110,7 @@ jobs:
     # needs: merge_check
     runs-on: ubuntu-latest
     # needs: variables
+    needs: ci_type_check
 
     permissions:
       contents: write
