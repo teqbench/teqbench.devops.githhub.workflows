@@ -97,6 +97,9 @@ env:
   COVERAGE_UPPER_BOUNDARY: 75
   COVERAGE_LOWER_BOUNDARY: 60
   OUTCOME_SUCCESS: 'success'
+  GIT_STATUS_NOTHING_TO_COMMIT: 'nothing to commit'
+  BOOLEAN_TRUE: 'true'
+  BOOLEAN_FALSE: 'false'
 
 # The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. 
 # For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
@@ -203,10 +206,14 @@ jobs:
         (..|.revision?) = ${{ steps.increment-version-number.outputs.revision }} 
         | (..|.suffix?) = \"${{ steps.increment-version-number.outputs.suffix }}\"' ${{ env.INPUT_FILE_PATH_VERSION }}`" > ${{ env.INPUT_FILE_PATH_VERSION }}
 
-    # Always commit the version file with new build number, even if build fails, and if the update version file step was successful.
+    - name: Check For Modified Version File
+      id: git-check-version-file
+      run: echo ::set-output name=modified::$(if git status | grep ${{ env.GIT_STATUS_NOTHING_TO_COMMIT }}; then echo ${{ env.BOOLEAN_FALSE }}; else echo ${{ env.BOOLEAN_TRUE }}; fi)
+  
+    # Always commit the version file with new build number but only if version file changed (see update-version-file step).
     - name: Commit Changes To Version File
       id: commit-version-file
-      if: ${{ always() && steps.update-version-file.outcome == env.OUTCOME_SUCCESS }}
+      if: ${{ always() && (steps.git-check-version-file.outputs.modified == env.BOOLEAN_TRUE) }}
       run: |
         git add ${{ env.INPUT_FILE_PATH_VERSION }}
         git commit -m "Update to version ${{ steps.increment-version-number.outputs.version }}"
@@ -214,21 +221,7 @@ jobs:
     - name: Create Badges Directory If Does Not Exist
       if: ${{ always() }}
       run: mkdir -p ${{ env.INPUT_FOLDER_PATH_BADGES }}
-  
-    - name: Update Build Status Badge
-      id: update-build-status-badge
-      if: ${{ always() }}
-      uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
-      with:
-        badge-type: ${{ contains(steps.build-solution.outcome,env.OUTCOME_SUCCESS) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
-        label: ${{ env.BADGE_LABEL_BUILD }}
-  
-    # If new build status badge file is the same as one being overwritten, git will NOT detect a change in the file as both are same size.
-    - name: Save Build Status Badge File
-      id: save-build-status-badge-file
-      if: ${{ always() && steps.update-build-status-badge.outcome == env.OUTCOME_SUCCESS }}
-      run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_BUILD_STATUS }}'
-    
+      
     - name: Update Build Number Badge
       id: update-build-number-badge
       if: ${{ always() }}
@@ -336,17 +329,39 @@ jobs:
       id: save-deploy-date-badge-file
       if: ${{ always() && steps.update-deploy-date-badge.outcome == env.OUTCOME_SUCCESS }}
       run: echo '${{ steps.update-deploy-date-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_DEPLOY_DATE }}'       
-        
-    # Should ALWAYS have at least one change, and that is to the build number badge file.
+
+    # Cannot eval success() outside of if statement, so use build-status step to get overall build status to 
+    # help determine the badge type for the build.
+    - name: Build Status
+      id: build-status
+      if: ${{ always() && success() }}
+      run: exit 0
+
+    - name: Update Build Status Badge
+      id: update-build-status-badge
+      if: ${{ always() }}
+      uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
+      with:
+        badge-type: ${{ (steps.build-status.outcome == env.OUTCOME_SUCCESS) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
+        label: ${{ env.BADGE_LABEL_BUILD }}
+  
+    - name: Save Build Status Badge File
+      id: save-build-status-badge-file
+      if: ${{ always() }}
+      run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_BUILD_STATUS }}'
+
+    - name: Check For ANY Modified Badge Files
+      id: git-check-badge-files
+      run: echo ::set-output name=modified::$(if git status | grep ${{ env.GIT_STATUS_NOTHING_TO_COMMIT }}; then echo ${{ env.BOOLEAN_FALSE }}; else echo ${{ env.BOOLEAN_TRUE }}; fi)
+
     - name: Commit Badge Changes
       id: commit-badge-changes
-      if: ${{ always() && steps.save-build-status-badge-file.outcome == env.OUTCOME_SUCCESS && steps.save-build-number-badge-file.outcome == env.OUTCOME_SUCCESS }}
+      if: ${{ always() && (steps.git-check-badge-files.outputs.modified == env.BOOLEAN_TRUE) }}
       run: |
         git add ${{ env.INPUT_FOLDER_PATH_BADGES }}
         git commit -m "Update repo badges."
 
     # ONLY tag and push when all prior steps (which were not skippedd) ran succesfully.
-    # BV - 1/1/24, FOR NOW, JUST DO ALWAYS BUT NEED TO CHANGE TO success()
     - name: Tag & Push Release/Deployment Commits
       id: tag-push-release-deployment-commits
       if: ${{ always() && (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (steps.commit-version-file.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-changes.outcome == env.OUTCOME_SUCCESS) }}
