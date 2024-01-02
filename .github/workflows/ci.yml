@@ -193,7 +193,7 @@ jobs:
 
     - name: Check For Modified Version File
       id: git-check-version-file
-      run: echo 'modified=$(if git status | grep ${{ env.GIT_STATUS_NOTHING_TO_COMMIT }}; then echo ${{ env.BOOLEAN_FALSE }}; else echo ${{ env.BOOLEAN_TRUE }}; fi)' >> $GITHUB_OUTPUT
+      run: echo "modified=$(if git status | grep '${{ env.GIT_STATUS_NOTHING_TO_COMMIT }}'; then echo '${{ env.BOOLEAN_FALSE }}'; else echo '${{ env.BOOLEAN_TRUE }}'; fi)" >> $GITHUB_OUTPUT
   
     # Always commit the version file with new build number but only if version file changed (see update-version-file step).
     - name: Commit Changes To Version File
@@ -354,7 +354,7 @@ jobs:
     - name: Check For ANY Modified Badge Files
       id: git-check-badge-files
       if: ${{ always() }}
-      run: echo 'modified=$(if git status | grep ${{ env.GIT_STATUS_NOTHING_TO_COMMIT }}; then echo ${{ env.BOOLEAN_FALSE }}; else echo ${{ env.BOOLEAN_TRUE }}; fi)' >> $GITHUB_OUTPUT
+      run: echo "modified=$(if git status | grep '${{ env.GIT_STATUS_NOTHING_TO_COMMIT }}'; then echo '${{ env.BOOLEAN_FALSE }}'; else echo '${{ env.BOOLEAN_TRUE }}'; fi)" >> $GITHUB_OUTPUT
 
     - name: Commit Badge Files Changes
       id: commit-badge-files-changes
