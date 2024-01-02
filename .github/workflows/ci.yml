@@ -219,6 +219,7 @@ jobs:
       run: dotnet test --no-restore
 
     - name: Create Badges Directory If Does Not Exist
+      if: ${{ always() }}
       run: mkdir -p ${{ env.INPUT_FOLDER_PATH_BADGES }}
       
     - name: Update Build Number Badge
