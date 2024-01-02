@@ -337,12 +337,14 @@ jobs:
       if: ${{ always() && success() }}
       run: exit 0
 
+    # If all previous steps successful AND the coverage is greater than or eqaul to the lower coverage boundary, 
+    # then the build is considered to be passing.
     - name: Update Build Status Badge
       id: update-build-status-badge
       if: ${{ always() }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
-        badge-type: ${{ (steps.build-status.outcome == env.OUTCOME_SUCCESS) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
+        badge-type: ${{ ((steps.build-status.outcome == env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(env.COVERAGE_LOWER_BOUNDARY))) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
         label: ${{ env.BADGE_LABEL_BUILD }}
   
     - name: Save Build Status Badge File
