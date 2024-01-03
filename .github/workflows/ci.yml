@@ -39,6 +39,11 @@ on:
       #   type: string
       #   required: true
 
+      coverage_lower_boundary_override:
+        description: "The lower coverage boundary (inclusive); a code coverage less than this value is a failing build, if code coverage is greater than or equal to (and all other required build steps are successful) build is passing. Must be less than or equal to the upper coverage boundary (75)."
+        type: number
+        default: 60
+
       project_source_folder:
         description: "The folder the project to be packaged as NuGet package is located. Default setting: './src'"
         type: string
@@ -71,6 +76,7 @@ env:
   INPUT_FILE_PATH_BADGE_RELEASE_TAG: '${{ inputs.badges_folder }}/release-tag.svg'
   INPUT_FILE_PATH_BADGE_DEPLOY_DATE: '${{ inputs.badges_folder }}/deploy-date.svg'
   INPUT_FILE_PATH_BADGE_DEPLOY_VERSION: '${{ inputs.badges_folder }}/deploy-version.svg'
+  COVERAGE_LOWER_BOUNDARY_OVERRIDE: ${{ inputs.coverage_lower_boundary_override }}
 
   # Env vars without input var values.
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
@@ -95,7 +101,6 @@ env:
   CI_TYPE_OPTION_BUILD_RELEASE: 'build-release'
   CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY: 'build-release-deploy'
   COVERAGE_UPPER_BOUNDARY: 75
-  COVERAGE_LOWER_BOUNDARY: 60
   OUTCOME_SUCCESS: 'success'
   GIT_STATUS_NOTHING_TO_COMMIT: 'nothing to commit'
   BOOLEAN_TRUE: 'true'
@@ -119,6 +124,13 @@ jobs:
   #         echo "This CI/CD workflow requires the pull request be merged in order to proceed."
   #         echo "Exiting workflow."
   #         exit 1
+  variables: 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Lower Coverage Boundary Override
+        id: validate-lower-coverage-boundary-override
+        run: echo "value=${{ (fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) < 0) && 0 || ((fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) > fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.COVERAGE_UPPER_BOUNDARY || env.COVERAGE_LOWER_BOUNDARY_OVERRIDE)}}" >>  >> $GITHUB_OUTPUT
+
   validate-ci-type:
     runs-on: ubuntu-latest
     steps: 
@@ -133,8 +145,7 @@ jobs:
   build-and-test:
     # needs: merge_check
     runs-on: ubuntu-latest
-    # needs: variables
-    needs: validate-ci-type
+    needs: [variables, validate-ci-type]
 
     permissions:
       contents: write
@@ -258,7 +269,7 @@ jobs:
       id: determine-coverage-badge-type
       # To get numeric values to compare as numbers, have to use fromJSON to force the comparison as numbers; apparently this is bug/issue in GitHub Actions as of 12/31/23.
       run: |
-        echo "badge-type=${{ ((contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.BADGE_TYPE_SUCCESS) || ((contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) < fromJSON(env.COVERAGE_LOWER_BOUNDARY)) && env.BADGE_TYPE_FAILURE) || (contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && env.BADGE_TYPE_WARNING))) || env.BADGE_TYPE_FAILURE }}" >> $GITHUB_OUTPUT
+        echo "badge-type=${{ ((contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.BADGE_TYPE_SUCCESS) || ((contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) < fromJSON(needs.variables.steps.validate-lower-coverage-boundary-override.value)) && env.BADGE_TYPE_FAILURE) || (contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && env.BADGE_TYPE_WARNING))) || env.BADGE_TYPE_FAILURE }}" >> $GITHUB_OUTPUT
 
     - name: Update Coverage Badge
       id: update-coverage-badge
@@ -343,7 +354,7 @@ jobs:
       if: ${{ always() }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
-        badge-type: ${{ ((steps.build-status.outcome == env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(env.COVERAGE_LOWER_BOUNDARY))) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
+        badge-type: ${{ ((steps.build-status.outcome == env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.variables.steps.validate-lower-coverage-boundary-override.value))) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
         label: ${{ env.BADGE_LABEL_BUILD }}
   
     - name: Save Build Status Badge File
