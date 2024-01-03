@@ -132,7 +132,7 @@ jobs:
         run: |
           echo "value=${{ (fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) < 0) && 0 || ((fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) > fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.COVERAGE_UPPER_BOUNDARY || env.COVERAGE_LOWER_BOUNDARY_OVERRIDE)}}" >> $GITHUB_OUTPUT
     outputs:
-      lower-coverage-boundary-override: ${{ steps.validate-lower-coverage-boundary-override.outputs.mergable_value }}
+      lower-coverage-boundary-override: ${{ steps.validate-lower-coverage-boundary-override.outputs.value }}
 
   validate-ci-type:
     runs-on: ubuntu-latest
