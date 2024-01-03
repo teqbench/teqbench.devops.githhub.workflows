@@ -130,7 +130,7 @@ jobs:
       - name: Validate Lower Coverage Boundary Override
         id: validate-lower-coverage-boundary-override
         run: |
-          echo "value=${{ (fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) < 0) && 0 || ((fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) > fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.COVERAGE_UPPER_BOUNDARY || env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) }}" >> $GITHUB_OUTPUT
+          echo "value='${{ (fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) < 0) && 0 || ((fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) > fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.COVERAGE_UPPER_BOUNDARY || env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) }}'" >> $GITHUB_OUTPUT
     outputs:
       lower-coverage-boundary-override: ${{ steps.validate-lower-coverage-boundary-override.outputs.value }}
 
