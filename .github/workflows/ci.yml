@@ -130,9 +130,9 @@ jobs:
       - name: Validate Lower Coverage Boundary Override
         id: validate-lower-coverage-boundary-override
         run: |
-          echo "value='${{ (fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) < 0) && 0 || ((fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) > fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.COVERAGE_UPPER_BOUNDARY || env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) }}'" >> $GITHUB_OUTPUT
+          echo "value=${{ (fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) < 0) && 0 || ((fromJSON(env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) > fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.COVERAGE_UPPER_BOUNDARY || env.COVERAGE_LOWER_BOUNDARY_OVERRIDE) }}" >> $GITHUB_OUTPUT
     outputs:
-      lower-coverage-boundary-override: ${{ steps.validate-lower-coverage-boundary-override.outputs.value }}
+      COVERAGE_LOWER_BOUNDARY_OVERRIDE: ${{ steps.validate-lower-coverage-boundary-override.outputs.value }}
 
   validate-ci-type:
     runs-on: ubuntu-latest
@@ -272,9 +272,7 @@ jobs:
       id: determine-coverage-badge-type
       # To get numeric values to compare as numbers, have to use fromJSON to force the comparison as numbers; apparently this is bug/issue in GitHub Actions as of 12/31/23.
       run: |
-        # echo "needs.variables.outputs.lower-coverage-boundary-override.value = ${{ needs.variables.outputs.lower-coverage-boundary-override.value }}"
-        # echo "fromJSON(needs.variables.outputs.lower-coverage-boundary-override.value) = ${{ fromJSON(needs.variables.outputs.lower-coverage-boundary-override.value) }}"
-        echo "badge-type=${{ env.BADGE_TYPE_FAILURE }}" >> $GITHUB_OUTPUT
+        echo "badge-type=${{ ((contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.BADGE_TYPE_SUCCESS) || ((contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) < fromJSON(needs.variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE)) && env.BADGE_TYPE_FAILURE) || (contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && env.BADGE_TYPE_WARNING))) || env.BADGE_TYPE_FAILURE }}" >> $GITHUB_OUTPUT
 
     - name: Update Coverage Badge
       id: update-coverage-badge
@@ -359,7 +357,7 @@ jobs:
       if: ${{ always() }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
-        badge-type: ${{ ((steps.build-status.outcome == env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.variables.outputs.lower-coverage-boundary-override.value))) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
+        badge-type: ${{ ((steps.build-status.outcome == env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE))) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
         label: ${{ env.BADGE_LABEL_BUILD }}
   
     - name: Save Build Status Badge File
