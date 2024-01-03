@@ -1,0 +1,24 @@
+name: Release & Deploy
+# TeqBench - Release & Deploy - Shared release and deployment.
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        type: choice
+        description: Release Type
+        options: 
+        - Major
+        - Minor
+        - Patch
+
+# Create a project card on the release board
+# if successful, call teqbench/ci-cd-workflows/.github/workflows/ci.yml@main with project card values
+# if ci successful, create a release
+# if create release successful, deploy
+
+jobs:
+  ci:
+    name: CI
+    uses: teqbench/teqbench.devops.githhub.workflows/.github/workflows/ci.yml@main
+    secrets: inherit
