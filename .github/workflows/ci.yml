@@ -89,6 +89,7 @@ env:
   BUILD_CONFIG_NAME: 'Release'
   # BUILD_CONFIG_RELEASE_TYPE: 'BUILD'  
   BUILD_CONFIG_BRANCH: 'main'
+  BUILD_CONFIG_PACKAGE_PUBLISH_FOLDER: './publish'
   BADGE_TYPE_INFORMATION: 'INFORMATION'
   BADGE_TYPE_WARNING: 'WARNING'
   BADGE_TYPE_SUCCESS: 'SUCCESS'
@@ -418,34 +419,52 @@ jobs:
         git add ${{ env.INPUT_FOLDER_PATH_BADGES }}
         git commit -m "Update repo badges."
 
-    # ONLY tag and push when all prior steps (which were not skippedd) ran succesfully.
+    # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
+    # when the CI type is CI_TYPE_OPTION_BUILD_RELEASE or CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY and
+    # when steps which committed changes to the version file and badge files ran succesffully.
     - name: Tag & Push Release/Deployment Commits
       id: tag-push-release-deployment-commits
-      if: ${{ always() && (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (steps.commit-version-file-changes.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-files-changes.outcome == env.OUTCOME_SUCCESS) }}
+      if: ${{ (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (steps.commit-version-file-changes.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-files-changes.outcome == env.OUTCOME_SUCCESS) }}
       run: |
         git tag -a ${{ steps.increment-version-number.outputs.tag }} -m "Added tag ${{ steps.increment-version-number.outputs.tag }}, the specified CI type is '${{ env.INPUT_CI_TYPE }}'."
         git push origin ${{ steps.increment-version-number.outputs.tag }}
 
     - name: Create Release & Generate Notes
       id: create-release
-      if: ${{ always() && steps.tag-push-release-deployment-commits.outcome == env.OUTCOME_SUCCESS }}
+      if: ${{ steps.tag-push-release-deployment-commits.outcome == env.OUTCOME_SUCCESS }}
       run: gh release create ${{ steps.increment-version-number.outputs.tag }} --generate-notes --repo ${{ env.INPUT_BUILD_CONFIG_REPOSITORY }}
       env:
         GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
-    - name: Assign Release Label
-      if: ${{ always() && steps.create-release.outcome == env.OUTCOME_SUCCESS }}
-      uses: actions/github-script@v6
-      with:
-        script: |
-          github.rest.issues.addLabels({
-            # issue_number: ${{ env.EVENT_NUMBER }},
-            owner: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_OWNER }}",
-            repo: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_NAME }}",
-            labels: ["Release-${{ steps.increment-version-number.outputs.tag }}"]
-          })
+    - name: Create Package
+      id: create-package
+      if: ${{ steps.create-release.outcome == env.OUTCOME_SUCCESS }}
+      # The dotnet command would not run here using multiline; once put all on single line, ran successfully.
+      run: dotnet pack ${{ env.INPUT_FOLDER_PATH_SOURCE }} -c:${{ env.BUILD_CONFIG_NAME }} -p:major=${{ steps.increment-version-number.outputs.major }} -p:minor=${{ steps.increment-version-number.outputs.minor }} -p:patch=${{ steps.increment-version-number.outputs.patch }} -p:build=${{ steps.increment-version-number.outputs.build }} -p:revision=${{ steps.increment-version-number.outputs.revision }} -o ${{ env.BUILD_CONFIG_PACKAGE_PUBLISH_FOLDER }}  --no-build
+    
+    - name: Publish Package
+      if: ${{ steps.create-package.outcome == env.OUTCOME_SUCCESS }}
+      # The token, DEVOPS_PACKAGE_PUBLISHER_TOKEN, belongs to the devops-teqbench-com user and has repo/packages:write scope
+      # however, publishing appears to only work when the owner of the supplied town is also assigned the 'owner' role
+      # within the GitHub organzation which own's the repo being packaged/published.
+      run: dotnet nuget push ${{ env.BUILD_CONFIG_PACKAGE_PUBLISH_FOLDER }}/*.nupkg --skip-duplicate --api-key ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
+
+    # Need to wire up projects in order to use this step. Not sure how to approach user flow at this point so comment out for now.
+    # - name: Assign Release Label
+    #   if: ${{ always() && steps.create-release.outcome == env.OUTCOME_SUCCESS }}
+    #   uses: actions/github-script@v6
+    #   with:
+    #     script: |
+    #       github.rest.issues.addLabels({
+    #         # issue_number: ${{ env.EVENT_NUMBER }},
+    #         owner: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_OWNER }}",
+    #         repo: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_NAME }}",
+    #         labels: ["Release-${{ steps.increment-version-number.outputs.tag }}"]
+    #       })
             
-    # Always push when the CI type is CI_TYPE_OPTION_BUILD_CI or CI_TYPE_OPTION_BUILD_MANUAL
+    # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
+    # when the CI type is CI_TYPE_OPTION_BUILD_CI or CI_TYPE_OPTION_BUILD_MANUAL and
+    # when steps which committed changes to the version file and badge files ran succesffully.
     - name: Push Build Commits
       if: ${{ always() && ((env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_CI) || (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_MANUAL)) && ((steps.commit-version-file-changes.outcome == env.OUTCOME_SUCCESS) || (steps.commit-badge-files-changes.outcome == env.OUTCOME_SUCCESS)) }}
       run: |
