@@ -92,7 +92,6 @@ jobs:
         git config --global user.name '${{ vars.ORG_DEVOPS_GIT_CONFIG_AUTHOR }}'
         git config --global user.email '${{ vars.ORG_DEVOPS_GIT_CONFIG_EMAIL }}' 
         echo 'needs.build.outputs.status == ${{ needs.build.outputs.status }}'
-        echo 'needs.build.outputs.outcome == ${{ needs.build.outputs.outcome }}'
         echo 'needs.build.outputs.tag == ${{ needs.build.outputs.tag }}'
 
     - name: Tag & Push Release
