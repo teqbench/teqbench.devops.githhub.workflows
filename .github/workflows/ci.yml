@@ -88,9 +88,9 @@ on:
       release_tag:
         description: "The version number in 'vMajor.Minor.Build.Revision' format."
         value: ${{ jobs.build.outputs.release_tag }}
-      coverage:
-        description: "The code coverage value."
-        value: ${{ steps.read-coverage-file.outputs.coverage }}   
+      # coverage:
+      #   description: "The code coverage value."
+      #   value: ${{ steps.read-coverage-file.outputs.coverage }}   
         
 env:
   # Env vars based on input values
@@ -467,4 +467,4 @@ jobs:
       build: ${{ steps.increment-version-number.outputs.build }}
       revision: ${{ steps.increment-version-number.outputs.revision }}
       release_tag: ${{ steps.increment-version-number.outputs.tag }} 
-      coverage: ${{ steps.read-coverage-file.outputs.coverage }}   
+      # coverage: ${{ steps.read-coverage-file.outputs.coverage }}   
