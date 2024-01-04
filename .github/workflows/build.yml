@@ -1,5 +1,5 @@
 name: Common .NET Build and Test Workflow
-# TeqBench - Common CI workflow to build and test a .NET repo.
+# TeqBench - Shared workflow to build and test a .NET repo.
 
 on: 
   workflow_call:
@@ -14,11 +14,6 @@ on:
         type: string
         default: ${{ github.repository_owner }}
 
-      repository_name:
-        description: "The respository's name without owner, i.e. ci-cd-workflows."
-        type: string
-        default: ${{ github.event.repository.name }}
-
       ci_type:
         description: "CI type to perform; build-manual, build-ci, build-release, build-release-deploy. Default setting: 'build-ci'"
         type: string
@@ -28,21 +23,6 @@ on:
         description: "Release type to perform. Options MAJOR, MINOR, PATCH if CI type is build-release or build-release-deploy, BUILD if CI type is build-ci or build-manual."
         type: string
         default: 'BUILD'
-
-      # resource_url:
-      #   type: string
-      #   description: "The URL of the issue/PR to get or update"
-      #   default: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
-
-      # event_number:
-      #   description: "The issue/pr number the supplied resource URL is associated with to validate."
-      #   type: string
-      #   required: true
-        
-      # project_number:
-      #   description: "The project number the supplied resource URL is associated with to update."
-      #   type: string
-      #   required: true
 
       coverage_lower_boundary_override:
         description: "The lower coverage boundary (inclusive); a code coverage less than this value is a failing build, if code coverage is greater than or equal to (and all other required build steps are successful) build is passing. Must be less than or equal to the upper coverage boundary (75)."
@@ -90,17 +70,12 @@ on:
         value: ${{ jobs.build.outputs.tag }}
       version_commit_hash:
         value: ${{ jobs.build.outputs.version_commit_hash }}
-
-      # coverage:
-      #   description: "The code coverage value."
-      #   value: ${{ steps.read-coverage-file.outputs.coverage }}   
         
 env:
   # Env vars based on input values
   INPUT_CI_TYPE: ${{ inputs.ci_type }}
   INPUT_BUILD_CONFIG_REPOSITORY: ${{ inputs.repository }}
-  # INPUT_BUILD_CONFIG_REPOSITORY_OWNER: ${{ inputs.repository_owner }}
-  # INPUT_BUILD_CONFIG_REPOSITORY_NAME: ${{ inputs.repository_name }}
+  INPUT_BUILD_CONFIG_REPOSITORY_OWNER: ${{ inputs.repository_owner }}
   INPUT_FOLDER_PATH_SOURCE: ${{ inputs.project_source_folder }}    
   INPUT_FOLDER_PATH_BADGES: '${{ inputs.badges_folder }}'
   INPUT_FOLDER_PATH_COVERAGE: '${{ inputs.coverage_folder }}'
@@ -118,9 +93,7 @@ env:
   # Env vars without input var values.
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
   BUILD_CONFIG_NAME: 'Release'
-  # BUILD_CONFIG_RELEASE_TYPE: 'BUILD'  
   BUILD_CONFIG_BRANCH: 'main'
-  BUILD_CONFIG_PACKAGE_PUBLISH_FOLDER: './publish'
   BADGE_TYPE_INFORMATION: 'INFORMATION'
   BADGE_TYPE_WARNING: 'WARNING'
   BADGE_TYPE_SUCCESS: 'SUCCESS'
@@ -131,10 +104,6 @@ env:
   BADGE_LABEL_BUILD: 'build'
   BADGE_LABEL_BUILD_NUMBER: 'build #'
   BADGE_LABEL_COVERAGE: 'coverage'
-  # BADGE_LABEL_RELEASE_TAG: 'release tag'
-  # BADGE_LABEL_RELEASE_DATE: 'released'
-  # BADGE_LABEL_DEPLOY_VERSION: 'deploy version'
-  # BADGE_LABEL_DEPLOY_DATE: 'deployed'
   CI_TYPE_OPTION_BUILD_CI: 'build-ci'
   CI_TYPE_OPTION_BUILD_MANUAL: 'build-manual'
   CI_TYPE_OPTION_BUILD_RELEASE: 'build-release'
@@ -254,7 +223,7 @@ jobs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: ${{ env.BUILD_CONFIG_DOTNET_VERSION }}
-        source-url: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+        source-url: https://nuget.pkg.github.com/${{ env.INPUT_BUILD_CONFIG_REPOSITORY_OWNER }}/index.json
 
     - name: Get Current Version JSON From Version File
       id: get-version-json
@@ -284,22 +253,6 @@ jobs:
         (..|.revision?) = ${{ steps.increment-version-number.outputs.revision }} 
         | (..|.suffix?) = \"${{ steps.increment-version-number.outputs.suffix }}\"' ${{ env.INPUT_FILE_PATH_VERSION }}`" > ${{ env.INPUT_FILE_PATH_VERSION }}
 
-    # - name: Check For Modified Version File
-    #   id: git-check-version-file
-    #   run: echo "modified=$(if git status | grep '${{ env.GIT_STATUS_NOTHING_TO_COMMIT }}'; then echo '${{ env.BOOLEAN_FALSE }}'; else echo '${{ env.BOOLEAN_TRUE }}'; fi)" >> $GITHUB_OUTPUT
-  
-    # # Always commit the version file with new build number but only if version file changed (see update-version-file step).
-    # # Commit version file changes and badge file changes separately. This is to be able to use the updated build #
-    # # from the updated version to create a badge, but ONLY if both incrementing the version number and committing
-    # # the version file changes were BOTH successful.
-    # - name: Commit Changes To Version File
-    #   id: commit-version-file-changes
-    #   if: ${{ steps.git-check-version-file.outputs.modified == env.BOOLEAN_TRUE }}
-    #   run: |
-    #     git add ${{ env.INPUT_FILE_PATH_VERSION }}
-    #     git commit -m "Update to version ${{ steps.increment-version-number.outputs.version }}"
-    #     echo "hash=$(git rev-parse HEAD --verify)" >> $GITHUB_OUTPUT
-
     - name: Restore .NET Project Dependencies
       run: dotnet restore
   
@@ -312,7 +265,6 @@ jobs:
     # Only run unit tests if all prior steps, including the Build Solution step, were successful.
     - name: Run Unit Tests
       id: run-unit-tests
-      if: ${{ success() }}
       run: dotnet test --no-restore
 
     - name: Create Badges Directory If Does Not Exist
@@ -329,11 +281,11 @@ jobs:
       with:
         badge-type: ${{ env.BADGE_TYPE_INFORMATION }}
         label: ${{ env.BADGE_LABEL_BUILD_NUMBER }}
-        message: ${{ (contains(steps.increment-version-number.outcome,env.OUTCOME_SUCCESS) && contains(steps.commit-version-file-changes.outcome,env.OUTCOME_SUCCESS)) && steps.increment-version-number.outputs.build || 'N/A' }}
+        message: ${{ (steps.increment-version-number.outcome == env.OUTCOME_SUCCESS) && steps.increment-version-number.outputs.build || 'N/A' }}
 
     - name: Save Build Number Badge File
       id: save-build-number-badge-file
-      if: ${{ always() && steps.update-build-number-badge.outcome == env.OUTCOME_SUCCESS }}
+      if: ${{ always() && (steps.update-build-number-badge.outcome == env.OUTCOME_SUCCESS) }}
       run: echo '${{ steps.update-build-number-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_BUILD_NUMBER }}'
 
     # Read coverage XML from file
@@ -346,7 +298,7 @@ jobs:
     # Pass coverage XML to action to get coverage %
     - name: Get Coverage Value
       id: get-coverage-value
-      if: ${{ steps.run-unit-tests.outcome == env.OUTCOME_SUCCESS && steps.read-coverage-file.outcome == env.OUTCOME_SUCCESS }}
+      if: ${{ (steps.run-unit-tests.outcome == env.OUTCOME_SUCCESS) && (steps.read-coverage-file.outcome == env.OUTCOME_SUCCESS) }}
       uses: teqbench/teqbench.devops.githhub.actions.coverage-reader@v2.0.1
       with:
         coverage-xml: '${{ steps.read-coverage-file.outputs.xml }}'
@@ -358,15 +310,15 @@ jobs:
       id: determine-coverage-badge-type
       # To get numeric values to compare as numbers, have to use fromJSON to force the comparison as numbers; apparently this is bug/issue in GitHub Actions as of 12/31/23.
       run: |
-        echo "badge-type=${{ ((contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.BADGE_TYPE_SUCCESS) || ((contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) < fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE)) && env.BADGE_TYPE_FAILURE) || (contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && env.BADGE_TYPE_WARNING))) || env.BADGE_TYPE_FAILURE }}" >> $GITHUB_OUTPUT
+        echo "badge-type=${{ (((steps.get-coverage-value.outcome == env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(env.COVERAGE_UPPER_BOUNDARY)) && env.BADGE_TYPE_SUCCESS) || (((steps.get-coverage-value.outcome == env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) < fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE)) && env.BADGE_TYPE_FAILURE) || ((steps.get-coverage-value.outcome == env.OUTCOME_SUCCESS) && env.BADGE_TYPE_WARNING))) || env.BADGE_TYPE_FAILURE }}" >> $GITHUB_OUTPUT
 
     - name: Update Coverage Badge
       id: update-coverage-badge
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
-        badge-type: ${{ contains(steps.determine-coverage-badge-type.outcome,env.OUTCOME_SUCCESS) && steps.determine-coverage-badge-type.outputs.badge-type || env.BADGE_TYPE_FAILURE }}
+        badge-type: ${{ (steps.determine-coverage-badge-type.outcome == env.OUTCOME_SUCCESS) && steps.determine-coverage-badge-type.outputs.badge-type || env.BADGE_TYPE_FAILURE }}
         label: ${{ env.BADGE_LABEL_COVERAGE }}
-        message: ${{ format('{0}', contains(steps.get-coverage-value.outcome,env.OUTCOME_SUCCESS) && steps.get-coverage-value.outputs.coverage-foratted || '0%') }}
+        message: ${{ format('{0}', (steps.get-coverage-value.outcome == env.OUTCOME_SUCCESS) && steps.get-coverage-value.outputs.coverage-foratted || '0%') }}
 
     - name: Save Coverage Badge File
       id: save-coverage-badge-file
@@ -401,25 +353,6 @@ jobs:
       if: ${{ always() }}
       run: echo '${{ steps.update-build-status-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_BUILD_STATUS }}'
 
-    # - name: Check For ANY Modified Badge Files
-    #   id: git-check-badge-files
-    #   if: ${{ always() }}
-    #   run: echo "modified=$(if git status | grep '${{ env.GIT_STATUS_NOTHING_TO_COMMIT }}'; then echo '${{ env.BOOLEAN_FALSE }}'; else echo '${{ env.BOOLEAN_TRUE }}'; fi)" >> $GITHUB_OUTPUT
-
-    # # Commit version file changes and badge file changes separately. This is to be able to use the updated build #
-    # # from the updated version to create a badge, but ONLY if both incrementing the version number and committing
-    # # the version file changes were BOTH successful.
-    # - name: Commit Badge Files Changes
-    #   id: commit-badge-files-changes
-    #   if: ${{ always() && (steps.git-check-badge-files.outputs.modified == env.BOOLEAN_TRUE) }}
-    #   # Ammend the previous commit (i.e. the commit to update the version) with the updated badge files as to
-    #   # have a single commit with both the version file and badge file changes. This is helpful when want to later
-    #   # tag a commit (i.e. as is done when creating a release in a separate job).
-    #   # git commit -m "Update repo badges."
-    #   run: |
-    #     git add ${{ env.INPUT_FOLDER_PATH_BADGES }}
-    #     git commit --amend --no-edit
-
     # The version.json and at least one badge file (i.e. the build badge) should have been modified.
     - name: Check For Files To Commit
       id: git-status
@@ -450,49 +383,6 @@ jobs:
       if: ${{ success() }}
       run: exit 0
       
-    # # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
-    # # when the CI type is CI_TYPE_OPTION_BUILD_RELEASE or CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY and
-    # # when steps which committed changes to the version file and badge files ran succesffully.
-    # - name: Tag & Push Release
-    #   id: tag-push-release-deployment-commits
-    #   if: ${{ (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (steps.commit-version-file-changes.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-files-changes.outcome == env.OUTCOME_SUCCESS) }}
-    #   run: |
-    #     git tag -a ${{ steps.increment-version-number.outputs.tag }} -m "Added tag ${{ steps.increment-version-number.outputs.tag }}, the specified CI type is '${{ env.INPUT_CI_TYPE }}'."
-    #     git push origin ${{ steps.increment-version-number.outputs.tag }}
-
-    # - name: Create Release With Generated Notes
-    #   id: create-release
-    #   if: ${{ steps.tag-push-release-deployment-commits.outcome == env.OUTCOME_SUCCESS }}
-    #   run: gh release create ${{ steps.increment-version-number.outputs.tag }} --generate-notes --repo ${{ env.INPUT_BUILD_CONFIG_REPOSITORY }}
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
-
-    # - name: Create Package
-    #   id: create-package
-    #   if: ${{ steps.create-release.outcome == env.OUTCOME_SUCCESS }}
-    #   # The dotnet command would not run here using multiline; once put all on single line, ran successfully.
-    #   run: dotnet pack ${{ env.INPUT_FOLDER_PATH_SOURCE }} -c:${{ env.BUILD_CONFIG_NAME }} -p:major=${{ steps.increment-version-number.outputs.major }} -p:minor=${{ steps.increment-version-number.outputs.minor }} -p:patch=${{ steps.increment-version-number.outputs.patch }} -p:build=${{ steps.increment-version-number.outputs.build }} -p:revision=${{ steps.increment-version-number.outputs.revision }} -o ${{ env.BUILD_CONFIG_PACKAGE_PUBLISH_FOLDER }}  --no-build
-    
-    # - name: Publish Package
-    #   if: ${{ steps.create-package.outcome == env.OUTCOME_SUCCESS }}
-    #   # The token, DEVOPS_PACKAGE_PUBLISHER_TOKEN, belongs to the devops-teqbench-com user and has repo/packages:write scope
-    #   # however, publishing appears to only work when the owner of the supplied town is also assigned the 'owner' role
-    #   # within the GitHub organzation which own's the repo being packaged/published.
-    #   run: dotnet nuget push ${{ env.BUILD_CONFIG_PACKAGE_PUBLISH_FOLDER }}/*.nupkg --skip-duplicate --api-key ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
-
-    # # Need to wire up projects in order to use this step. Not sure how to approach user flow at this point so comment out for now.
-    # # - name: Assign Release Label
-    # #   if: ${{ always() && steps.create-release.outcome == env.OUTCOME_SUCCESS }}
-    # #   uses: actions/github-script@v6
-    # #   with:
-    # #     script: |
-    # #       github.rest.issues.addLabels({
-    # #         # issue_number: ${{ env.EVENT_NUMBER }},
-    # #         owner: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_OWNER }}",
-    # #         repo: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_NAME }}",
-    # #         labels: ["Release-${{ steps.increment-version-number.outputs.tag }}"]
-    # #       })  
-
     outputs:
       status: ${{ ((steps.final-build-status.outcome == env.OUTCOME_SUCCESS) && (steps.is-coverage-acceptable.outcome == env.OUTCOME_SUCCESS) && (steps.push-commits.outcome == env.OUTCOME_SUCCESS)) && env.OUTCOME_SUCCESS || env.OUTCOME_FAILURE }}
       major: ${{ steps.increment-version-number.outputs.major }}
@@ -502,4 +392,3 @@ jobs:
       revision: ${{ steps.increment-version-number.outputs.revision }}
       tag: ${{ steps.increment-version-number.outputs.tag }}
       version_commit_hash: ${{ steps.commit-files-changes.outputs.hash }}
-      # coverage: ${{ steps.read-coverage-file.outputs.coverage }}   
