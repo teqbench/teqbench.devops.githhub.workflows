@@ -70,7 +70,7 @@ env:
 jobs:
   build:  #builds and test, outputs version info, coverage info
     name: Build
-    uses: teqbench/teqbench.devops.githhub.workflows/.github/workflows/ci.yml@main
+    uses: teqbench/teqbench.devops.githhub.workflows/.github/workflows/build.yml@main
     secrets: inherit
     with:
       repository: ${{ inputs.repository }}
