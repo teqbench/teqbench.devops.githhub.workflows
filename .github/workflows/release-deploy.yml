@@ -1,24 +1,114 @@
-name: Release & Deploy
-# TeqBench - Release & Deploy - Shared release and deployment.
+name: Create Release & Deploy
 
-on:
-  workflow_dispatch:
+on: 
+  workflow_call:
     inputs:
-      name:
-        type: choice
-        description: Release Type
-        options: 
-        - Major
-        - Minor
-        - Patch
+      repository:
+        description: "The respository to build and test."
+        type: string
+        default: ${{ github.repository }}
 
-# Create a project card on the release board
-# if successful, call teqbench/ci-cd-workflows/.github/workflows/ci.yml@main with project card values
-# if ci successful, create a release
-# if create release successful, deploy
+      repository_owner:
+        description: "The respository's owner, i.e. teqbench."
+        type: string
+        default: ${{ github.repository_owner }}
+
+      repository_name:
+        description: "The respository's name without owner, i.e. ci-cd-workflows."
+        type: string
+        default: ${{ github.event.repository.name }}
+
+      # ci_type:
+      #   description: "CI type to perform; build-manual, build-ci, build-release, build-release-deploy. Default setting: 'build-ci'"
+      #   type: string
+      #   default: 'build-ci'
+      
+      release_type:
+        description: "Release type to perform. Options MAJOR, MINOR, PATCH if CI type is build-release or build-release-deploy, BUILD if CI type is build-ci or build-manual."
+        type: string
+        default: 'BUILD'
+
+      coverage_lower_boundary_override:
+        description: "The lower coverage boundary (inclusive); a code coverage less than this value is a failing build, if code coverage is greater than or equal to (and all other required build steps are successful) build is passing. Must be less than or equal to the upper coverage boundary (75)."
+        type: number
+        default: 60
+
+      project_source_folder:
+        description: "The folder the project to be packaged as NuGet package is located. Default setting: './src'"
+        type: string
+        default: './src'
+        
+      badges_folder:
+        description: "The folder for the repo's badges. Default setting: './.badges'"
+        type: string
+        default: './.badges'
+      
+      coverage_folder:
+        description: "The folder for the repo's coverage data and reports Default setting: './coverage'"
+        type: string
+        default: './.coverage'
+
+env:
+  # Env vars based on input values
+  INPUT_BUILD_CONFIG_REPOSITORY: ${{ inputs.repository }}
+  # INPUT_BUILD_CONFIG_REPOSITORY_OWNER: ${{ inputs.repository_owner }}
+  # INPUT_BUILD_CONFIG_REPOSITORY_NAME: ${{ inputs.repository_name }}
+  INPUT_FOLDER_PATH_SOURCE: ${{ inputs.project_source_folder }}    
+  # INPUT_COVERAGE_LOWER_BOUNDARY_OVERRIDE: ${{ inputs.coverage_lower_boundary_override }}
+  # INPUT_RELEASE_TYPE: ${{ inputs.release_type }}
+
+  # Env vars without input var values.
+  BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
+  BUILD_CONFIG_NAME: 'Release'
+  # BUILD_CONFIG_RELEASE_TYPE: 'BUILD'  
+  BUILD_CONFIG_BRANCH: 'main'
+  BUILD_CONFIG_PACKAGE_PUBLISH_FOLDER: './publish'
+  OUTCOME_SUCCESS: 'success'
+  BOOLEAN_TRUE: 'true'
+  BOOLEAN_FALSE: 'false'
 
 jobs:
-  ci:
-    name: CI
+  build:  #builds and test, outputs version info, coverage info
+    name: Build
     uses: teqbench/teqbench.devops.githhub.workflows/.github/workflows/ci.yml@main
     secrets: inherit
+    with:
+      repository: ${{ inputs.repository }}
+      repository_owner: ${{ inputs.repository_owner }}
+      repository_name: ${{ inputs.repository_name }}
+      ci_type: 'build-release-deploy'
+      release_type: ${{ inputs.release_type }}
+      coverage_lower_boundary_override: ${{ inputs.coverage_lower_boundary_override }}
+      project_source_folder: ${{ inputs.project_source_folder }}
+      badges_folder: ${{ inputs.badges_folder }}
+      coverage_folder: ${{ inputs.coverage_folder }}
+
+  release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Git Config
+      run: |
+        git config --global user.name '${{ vars.ORG_DEVOPS_GIT_CONFIG_AUTHOR }}'
+        git config --global user.email '${{ vars.ORG_DEVOPS_GIT_CONFIG_EMAIL }}'    
+
+    - name: Tag & Push Release
+      id: tag-push
+      if: ${{ needs.build.outputs.status == env.OUTCOME_SUCCESS }}
+      run: |
+        git tag -a ${{ needs.builds.outputs.outputs.tag }} -m "Added tag ${{ needs.builds.outputs.outputs.tag }}."
+        git push origin ${{ needs.builds.outputs.outputs.tag }}
+
+    - name: Create Release With Generated Notes
+      id: create
+      if: ${{ steps.tag-push.outcome == env.OUTCOME_SUCCESS }}
+      run: gh release create ${{ needs.builds.outputs.outputs.tag }} --generate-notes --repo ${{ env.INPUT_BUILD_CONFIG_REPOSITORY }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
+
+  # # Creates deployment based on release...forget creating deployment badges...just getting into chicken-egg scenario with when commit the badge file
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: [build, release]
+  #   steps:
+    
