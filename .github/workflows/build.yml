@@ -377,13 +377,13 @@ jobs:
       run: |
         git push
 
-    # If the coverage is assessment step (i.e. is-coverage-acceptable) was not successful OR if the pushing of any commits was not successful, build fails.
+    # If ANY previous step of this job failed, or if the coverage is assessment step (i.e. is-coverage-acceptable) was not successful OR if the pushing of any commits was not successful, build fails.
     - name: Fail This Build?
-      if: (steps.is-coverage-acceptable.outcome != env.OUTCOME_SUCCESS) || (steps.push-commits.outcome != env.OUTCOME_SUCCESS)
+      if: ${{ failure() || (steps.is-coverage-acceptable.outcome != env.OUTCOME_SUCCESS) || (steps.push-commits.outcome != env.OUTCOME_SUCCESS) }}
       run: exit 1
       
     outputs:
-      status: success()
+      status: ${{ env.OUTCOME_SUCCESS }}
       major: ${{ steps.increment-version-number.outputs.major }}
       minor: ${{ steps.increment-version-number.outputs.minor }}
       patch: ${{ steps.increment-version-number.outputs.patch }}
