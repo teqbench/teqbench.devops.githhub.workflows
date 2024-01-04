@@ -8,34 +8,42 @@ on:
       repository:
         description: "The respository to build and test."
         type: string
+        default: ${{ github.repository }}
 
       repository_owner:
         description: "The respository's owner, i.e. teqbench."
         type: string
+        default: ${{ github.repository_owner }}
 
       ci_type:
         description: "CI type to perform; build-manual, build-ci, build-release, build-release-deploy. Default setting: 'build-ci'"
         type: string
-
+        default: 'build-ci'
+      
       release_type:
         description: "Release type to perform. Options MAJOR, MINOR, PATCH if CI type is build-release or build-release-deploy, BUILD if CI type is build-ci or build-manual."
         type: string
+        default: 'BUILD'
 
       coverage_lower_boundary_override:
         description: "The lower coverage boundary (inclusive); a code coverage less than this value is a failing build, if code coverage is greater than or equal to (and all other required build steps are successful) build is passing. Must be less than or equal to the upper coverage boundary (75)."
         type: number
+        default: 60
 
       project_source_folder:
         description: "The folder the project to be packaged as NuGet package is located. Default setting: './src'"
         type: string
-
+        default: './src'
+        
       badges_folder:
         description: "The folder for the repo's badges. Default setting: './.badges'"
         type: string
-
+        default: './.badges'
+      
       coverage_folder:
         description: "The folder for the repo's coverage data and reports Default setting: './coverage'"
         type: string
+        default: './.coverage'
 
     # NOTE: Job outputs are unicode strings, and cannot specify the type for workflow outputs. So,
     # here, since returning job outputs, the return types are strings.
