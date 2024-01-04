@@ -85,9 +85,9 @@ on:
       revision:
         description: 'The revision component of the version number.'
         value: ${{ jobs.build.outputs.revision }}
-      release_tag:
+      tag:
         description: "The version number in 'vMajor.Minor.Build.Revision' format."
-        value: ${{ jobs.build.outputs.release_tag }}
+        value: ${{ jobs.build.outputs.tag }}
       # coverage:
       #   description: "The code coverage value."
       #   value: ${{ steps.read-coverage-file.outputs.coverage }}   
@@ -466,5 +466,5 @@ jobs:
       patch: ${{ steps.increment-version-number.outputs.patch }}
       build: ${{ steps.increment-version-number.outputs.build }}
       revision: ${{ steps.increment-version-number.outputs.revision }}
-      release_tag: ${{ steps.increment-version-number.outputs.tag }} 
+      tag: ${{ steps.increment-version-number.outputs.tag }} 
       # coverage: ${{ steps.read-coverage-file.outputs.coverage }}   
