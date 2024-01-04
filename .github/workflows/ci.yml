@@ -439,7 +439,7 @@ jobs:
       with:
         script: |
           github.rest.issues.addLabels({
-            issue_number: ${{ env.EVENT_NUMBER }},
+            # issue_number: ${{ env.EVENT_NUMBER }},
             owner: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_OWNER }}",
             repo: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_NAME }}",
             labels: ["Release-${{ steps.increment-version-number.outputs.tag }}"]
