@@ -25,9 +25,9 @@ on:
         default: 'build-ci'
       
       release_type:
-        description: "Release type to perform; major, minor, patch. Default setting: 'build-ci'. Only applicable if CI type is build-release or build-release-deploy"
+        description: "Release type to perform. Options MAJOR, MINOR, PATCH if CI type is build-release or build-release-deploy, BUILD if CI type is build-ci or build-manual."
         type: string
-        default: 'build'
+        default: 'BUILD'
 
       # resource_url:
       #   type: string
