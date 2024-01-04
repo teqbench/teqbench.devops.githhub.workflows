@@ -337,7 +337,7 @@ jobs:
     
     - name: Is Coverage Acceptable
       id: is-coverage-acceptable
-      if: ${{ fromJSON(steps.get-coverage-value.outputs.coverage) < fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE) }}
+      if: ${{ fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE) }}
       run: exit 0
 
     # Cannot eval success() outside of if statement, so use build-status step to get overall build status to 
