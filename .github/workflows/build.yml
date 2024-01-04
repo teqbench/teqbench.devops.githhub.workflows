@@ -165,7 +165,7 @@ jobs:
       run: |
         echo "Specified Release Type, '${{ env.INPUT_RELEASE_TYPE }}', is not valid for the supplied CI Type, '${{ env.INPUT_CI_TYPE }}'."
         echo "Valid options are: ${{ env.RELEASE_TYPE_OPTION_MAJOR }}, ${{ env.RELEASE_TYPE_OPTION_MINOR }}, ${{ env.RELEASE_TYPE_OPTION_PATCH }} for CI types ${{ env.CI_TYPE_OPTION_BUILD_RELEASE }} and ${{ env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}, otherwise ${{ env.RELEASE_TYPE_OPTION_BUILD }} is valid for CI types ${{ env.CI_TYPE_OPTION_BUILD_MANUAL }} or ${{ env.CI_TYPE_OPTION_BUILD_CI }}"
-        echo "Exiting workflow."
+        echo "Fail job."
         exit 1
       
   validate-merge:
@@ -178,7 +178,7 @@ jobs:
         run: |
           echo "Pull request has been closed, but not merged."
           echo "This CI/CD workflow (i.e. '${{ env.INPUT_CI_TYPE }}') requires a pull request and it be merged in order to proceed."
-          echo "Exiting workflow."
+          echo "Fail job."
           exit 1
 
   validate-variables: 
@@ -378,10 +378,15 @@ jobs:
         git push
 
     # If ANY previous step of this job failed, or if the coverage is assessment step (i.e. is-coverage-acceptable) was not successful OR if the pushing of any commits was not successful, build fails.
-    - name: Fail This Build?
+    - name: Fail Build?
       if: ${{ failure() || (steps.is-coverage-acceptable.outcome != env.OUTCOME_SUCCESS) || (steps.push-commits.outcome != env.OUTCOME_SUCCESS) }}
-      run: exit 1
-      
+      run: |
+        echo "ALL of the previous steps of this job have to be successful, the code coverage is above the minimum threshold, and the push of any commits has to be successful, for the job to be successful."
+        echo "steps.is-coverage-acceptable.outcome == '${{ steps.is-coverage-acceptable.outcome }}'
+        echo "steps.push-commits.outcome == '${{ steps.push-commits.outcome }}'
+        echo "Fail job."
+        exit 1
+            
     outputs:
       status: ${{ env.OUTCOME_SUCCESS }}
       major: ${{ steps.increment-version-number.outputs.major }}
