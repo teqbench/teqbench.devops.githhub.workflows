@@ -122,9 +122,10 @@ env:
 
 jobs:
   validate-ci-type:
+    name: Validate CI Type
     runs-on: ubuntu-latest
     steps: 
-    - name: Validate CI Type
+    - name: Validate
       # CI_TYPE_OPTION_BUILD_CI - PR merge is required in order to perform build.
       # CI_TYPE_OPTION_BUILD_MANUAL - PR merge is NOT required in order to perform build.
       # CI_TYPE_OPTION_BUILD_RELEASE - PR merge is TBD required in order to perform build.
@@ -142,10 +143,11 @@ jobs:
         exit 1
 
   validate-release-type:
+    name: Validate Release Type
     runs-on: ubuntu-latest
     needs: validate-ci-type
     steps:
-    - name: Validate Release Type
+    - name: Validate
       # For CI Types CI_TYPE_OPTION_BUILD_RELEASE and CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY valid release types are:
       # RELEASE_TYPE_OPTION_MAJOR - Backwards-incompatible updates and/or bugfixes
       # RELEASE_TYPE_OPTION_MINOR - Backwards-compatible updates and bugfixes
@@ -168,10 +170,11 @@ jobs:
         exit 1
       
   validate-merge:
+    name: Validate PR Merge
     runs-on: ubuntu-latest
     needs: [validate-ci-type, validate-release-type]
     steps:
-      - name: Validate PR Merge (If Required)
+      - name: Validate
         if: (github.event.pull_request.merged != true) && (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_CI)
         run: |
           echo "Pull request has been closed, but not merged."
@@ -180,6 +183,7 @@ jobs:
           exit 1
 
   validate-variables: 
+    name: Validate Variables
     runs-on: ubuntu-latest
     steps:
       - name: Validate Lower Coverage Boundary Override
@@ -190,6 +194,7 @@ jobs:
       COVERAGE_LOWER_BOUNDARY_OVERRIDE: ${{ steps.validate-lower-coverage-boundary-override.outputs.value }}
 
   build:
+    name: Build
     runs-on: ubuntu-latest
     needs: [validate-ci-type, validate-release-type, validate-variables, validate-merge]
 
