@@ -12,11 +12,6 @@ on:
         description: "The respository's owner, i.e. teqbench."
         type: string
         default: ${{ github.repository_owner }}
-
-      repository_name:
-        description: "The respository's name without owner, i.e. ci-cd-workflows."
-        type: string
-        default: ${{ github.event.repository.name }}
       
       release_type:
         description: "Release type to perform. Options MAJOR, MINOR, PATCH if CI type is build-release or build-release-deploy, BUILD if CI type is build-ci or build-manual."
@@ -73,7 +68,6 @@ jobs:
     with:
       repository: ${{ inputs.repository }}
       repository_owner: ${{ inputs.repository_owner }}
-      repository_name: ${{ inputs.repository_name }}
       ci_type: 'build-release-deploy'
       release_type: ${{ inputs.release_type }}
       coverage_lower_boundary_override: ${{ inputs.coverage_lower_boundary_override }}
