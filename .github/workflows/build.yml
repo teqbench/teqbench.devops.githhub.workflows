@@ -428,7 +428,7 @@ jobs:
 
     - name: Commit Files Changes
       id: commit-files-changes
-      if: ${{ always() && (steps.git-status.modified == env.BOOLEAN_TRUE) }}
+      if: ${{ always() && (steps.git-status.outputs.modified == env.BOOLEAN_TRUE) }}
       # Add all changed files (any file modifications, additions, deletions) to stage.
       # Commit and get the hash.
       run: |
