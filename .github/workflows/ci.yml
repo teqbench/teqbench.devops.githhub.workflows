@@ -334,10 +334,6 @@ jobs:
       if: ${{ steps.update-coverage-badge.outcome == env.OUTCOME_SUCCESS }}
       run: echo '${{ steps.update-coverage-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_COVERAGE }}'
     
-    - name: Is Coverage Acceptable
-      id: is-coverage-acceptable
-      run: exit ${{ (fromJSON(steps.get-coverage-value.outputs.coverage) < fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE)) && 1 || 0 }}
-
     # Cannot eval success() outside of if statement, so use build-status step to get overall build status to 
     # help determine the badge type for the build.
     - name: Build Status
@@ -352,8 +348,7 @@ jobs:
       if: ${{ always() }}
       uses: teqbench/teqbench.devops.githhub.actions.badge-maker@v1.0.2
       with:
-        # badge-type: ${{ ((steps.build-status.outcome == env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE))) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
-        badge-type: ${{ ((steps.build-status.outcome == env.OUTCOME_SUCCESS) && (steps.is-coverage-acceptable.outcome == env.OUTCOME_SUCCESS)) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
+        badge-type: ${{ ((steps.build-status.outcome == env.OUTCOME_SUCCESS) && (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE))) && env.BADGE_TYPE_PASSING || env.BADGE_TYPE_FAILING }}
         label: ${{ env.BADGE_LABEL_BUILD }}
   
     - name: Save Build Status Badge File
@@ -425,7 +420,7 @@ jobs:
     # #       })  
 
     outputs:
-      status: success() && ${{ (steps.is-coverage-acceptable.outcome == env.OUTCOME_SUCCESS) && (steps.push-commits.outcome == env.OUTCOME_SUCCESS) }}
+      status: success() && ${{ (fromJSON(steps.get-coverage-value.outputs.coverage) < fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE)) && (steps.push-commits.outcome == env.OUTCOME_SUCCESS) }}            
       major: ${{ steps.increment-version-number.outputs.major }}
       minor: ${{ steps.increment-version-number.outputs.minor }}
       patch: ${{ steps.increment-version-number.outputs.patch }}
