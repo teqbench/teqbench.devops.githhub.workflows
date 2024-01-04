@@ -17,11 +17,6 @@ on:
         description: "The respository's name without owner, i.e. ci-cd-workflows."
         type: string
         default: ${{ github.event.repository.name }}
-
-      # ci_type:
-      #   description: "CI type to perform; build-manual, build-ci, build-release, build-release-deploy. Default setting: 'build-ci'"
-      #   type: string
-      #   default: 'build-ci'
       
       release_type:
         description: "Release type to perform. Options MAJOR, MINOR, PATCH if CI type is build-release or build-release-deploy, BUILD if CI type is build-ci or build-manual."
@@ -51,24 +46,27 @@ on:
 env:
   # Env vars based on input values
   INPUT_BUILD_CONFIG_REPOSITORY: ${{ inputs.repository }}
-  # INPUT_BUILD_CONFIG_REPOSITORY_OWNER: ${{ inputs.repository_owner }}
-  # INPUT_BUILD_CONFIG_REPOSITORY_NAME: ${{ inputs.repository_name }}
   INPUT_FOLDER_PATH_SOURCE: ${{ inputs.project_source_folder }}    
-  # INPUT_COVERAGE_LOWER_BOUNDARY_OVERRIDE: ${{ inputs.coverage_lower_boundary_override }}
-  # INPUT_RELEASE_TYPE: ${{ inputs.release_type }}
 
   # Env vars without input var values.
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
   BUILD_CONFIG_NAME: 'Release'
-  # BUILD_CONFIG_RELEASE_TYPE: 'BUILD'  
   BUILD_CONFIG_BRANCH: 'main'
   BUILD_CONFIG_PACKAGE_PUBLISH_FOLDER: './publish'
   OUTCOME_SUCCESS: 'success'
   BOOLEAN_TRUE: 'true'
   BOOLEAN_FALSE: 'false'
 
+# The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. 
+# For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
+# `concurrency.group` generates a concurrency group name from the workflow name and repository name. 
+# The `||` operator is used to define fallback values.
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.repository || github.head_ref || github.ref }}'
+
 jobs:
-  build:  #builds and test, outputs version info, coverage info
+  # Build and test, outputs version info, coverage info using shared build workflow.
+  build:
     name: Build
     uses: teqbench/teqbench.devops.githhub.workflows/.github/workflows/build.yml@main
     secrets: inherit
@@ -83,6 +81,7 @@ jobs:
       badges_folder: ${{ inputs.badges_folder }}
       coverage_folder: ${{ inputs.coverage_folder }}
 
+  # Creates release based on the build.
   release:
     runs-on: ubuntu-latest
     needs: build
@@ -114,9 +113,18 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
-  # # Creates deployment based on release...forget creating deployment badges...just getting into chicken-egg scenario with when commit the badge file
-  # deploy:
-  #   runs-on: ubuntu-latest
-  #   needs: [build, release]
-  #   steps:
+  # Creates deployment based on release.
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build, release]
+    steps:
+    - name: Create Package
+      id: create-package
+      run: dotnet pack ${{ env.INPUT_FOLDER_PATH_SOURCE }} -c:${{ env.BUILD_CONFIG_NAME }} -p:major=${{ needs.build.outputs.major }} -p:minor=${{ needs.build.outputs.minor }} -p:patch=${{ needs.build.outputs.patch }} -p:build=${{ needs.build.outputs.build }} -p:revision=${{ needs.build.outputs.revision }} -o ${{ env.BUILD_CONFIG_PACKAGE_PUBLISH_FOLDER }}  --no-build
     
+    - name: Publish Package
+      if: ${{ steps.create-package.outcome == env.OUTCOME_SUCCESS }}
+      # The token, DEVOPS_PACKAGE_PUBLISHER_TOKEN, belongs to the devops-teqbench-com user and has repo/packages:write scope
+      # however, publishing appears to only work when the owner of the supplied town is also assigned the 'owner' role
+      # within the GitHub organzation which own's the repo being packaged/published.
+      run: dotnet nuget push ${{ env.BUILD_CONFIG_PACKAGE_PUBLISH_FOLDER }}/*.nupkg --skip-duplicate --api-key ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}
