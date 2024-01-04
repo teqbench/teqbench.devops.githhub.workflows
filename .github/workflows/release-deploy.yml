@@ -110,6 +110,11 @@ jobs:
       run: gh release create ${{ needs.build.outputs.tag }} --generate-notes --repo ${{ env.INPUT_BUILD_CONFIG_REPOSITORY }}
       env:
         GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
+    
+    # If the tag/push and create steps have any outcomes other that success, fail the release and prevent deployment.
+    - name: Is Release Successful?
+      if: ${{ steps.tag-push.outcome != env.OUTCOME_SUCCESS && steps.create.outcome != env.OUTCOME_SUCCESS }}
+      run: exit 1
 
   # Creates deployment based on release.
   deploy:
