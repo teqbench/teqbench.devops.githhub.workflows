@@ -88,6 +88,9 @@ on:
       tag:
         description: "The version number in 'vMajor.Minor.Build.Revision' format."
         value: ${{ jobs.build.outputs.tag }}
+      version_commit_hash:
+        value: ${{ jobs.build.outputs.version_commit_hash }}
+
       # coverage:
       #   description: "The code coverage value."
       #   value: ${{ steps.read-coverage-file.outputs.coverage }}   
@@ -286,12 +289,16 @@ jobs:
       run: echo "modified=$(if git status | grep '${{ env.GIT_STATUS_NOTHING_TO_COMMIT }}'; then echo '${{ env.BOOLEAN_FALSE }}'; else echo '${{ env.BOOLEAN_TRUE }}'; fi)" >> $GITHUB_OUTPUT
   
     # Always commit the version file with new build number but only if version file changed (see update-version-file step).
+    # Commit version file changes and badge file changes separately. This is to be able to use the updated build #
+    # from the updated version to create a badge, but ONLY if both incrementing the version number and committing
+    # the version file changes were BOTH successful.
     - name: Commit Changes To Version File
       id: commit-version-file-changes
       if: ${{ steps.git-check-version-file.outputs.modified == env.BOOLEAN_TRUE }}
       run: |
         git add ${{ env.INPUT_FILE_PATH_VERSION }}
         git commit -m "Update to version ${{ steps.increment-version-number.outputs.version }}"
+        echo "hash=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
     - name: Restore .NET Project Dependencies
       run: dotnet restore
@@ -312,6 +319,9 @@ jobs:
       if: ${{ always() }}
       run: mkdir -p ${{ env.INPUT_FOLDER_PATH_BADGES }}
       
+    # Commit version file changes and badge file changes separately. This is to be able to use the updated build #
+    # from the updated version to create a badge, but ONLY if both incrementing the version number and committing
+    # the version file changes were BOTH successful.
     - name: Update Build Number Badge
       id: update-build-number-badge
       if: ${{ always() && (steps.increment-version-number.outcome == env.OUTCOME_SUCCESS)}}
@@ -396,12 +406,20 @@ jobs:
       if: ${{ always() }}
       run: echo "modified=$(if git status | grep '${{ env.GIT_STATUS_NOTHING_TO_COMMIT }}'; then echo '${{ env.BOOLEAN_FALSE }}'; else echo '${{ env.BOOLEAN_TRUE }}'; fi)" >> $GITHUB_OUTPUT
 
+    # Commit version file changes and badge file changes separately. This is to be able to use the updated build #
+    # from the updated version to create a badge, but ONLY if both incrementing the version number and committing
+    # the version file changes were BOTH successful.
     - name: Commit Badge Files Changes
       id: commit-badge-files-changes
       if: ${{ always() && (steps.git-check-badge-files.outputs.modified == env.BOOLEAN_TRUE) }}
+      # Ammend the previous commit (i.e. the commit to update the version) with the updated badge files as to
+      # have a single commit with both the version file and badge file changes. This is helpful when want to later
+      # tag a commit (i.e. as is done when creating a release in a separate job).
       run: |
         git add ${{ env.INPUT_FOLDER_PATH_BADGES }}
-        git commit -m "Update repo badges."
+        git commit --amend
+
+        # git commit -m "Update repo badges."
 
     # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
     # when steps which committed changes to the version file and badge files ran succesffully.
@@ -466,5 +484,6 @@ jobs:
       patch: ${{ steps.increment-version-number.outputs.patch }}
       build: ${{ steps.increment-version-number.outputs.build }}
       revision: ${{ steps.increment-version-number.outputs.revision }}
-      tag: ${{ steps.increment-version-number.outputs.tag }} 
+      tag: ${{ steps.increment-version-number.outputs.tag }}
+      version_commit_hash: ${{ steps.commit-version-file-changes.outputs.hash }}
       # coverage: ${{ steps.read-coverage-file.outputs.coverage }}   
