@@ -1,4 +1,4 @@
-name: Common .NET Build and Test CI Workflow
+name: Common .NET Build and Test Workflow
 # TeqBench - Common CI workflow to build and test a .NET repo.
 
 on: 
