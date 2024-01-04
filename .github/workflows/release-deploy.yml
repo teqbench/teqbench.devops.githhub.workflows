@@ -93,19 +93,19 @@ jobs:
         git config --global user.email '${{ vars.ORG_DEVOPS_GIT_CONFIG_EMAIL }}' 
         echo 'needs.build.outputs.status == ${{ needs.build.outputs.status }}'
         echo 'needs.build.outputs.outcome == ${{ needs.build.outputs.outcome }}'
-        echo 'needs.build.outputs.outputs.tag == ${{ needs.build.outputs.outputs.tag }}'
+        echo 'needs.build.outputs.tag == ${{ needs.build.outputs.tag }}'
 
     - name: Tag & Push Release
       id: tag-push
       if: ${{ needs.build.outputs.outcome == env.OUTCOME_SUCCESS }}
       run: |
-        git tag -a ${{ needs.build.outputs.outputs.tag }} -m "Added tag ${{ needs.build.outputs.outputs.tag }}."
-        git push origin ${{ needs.build.outputs.outputs.tag }}
+        git tag -a ${{ needs.build.outputs.tag }} -m "Added tag ${{ needs.build.outputs.tag }}."
+        git push origin ${{ needs.build.outputs.tag }}
 
     - name: Create Release With Generated Notes
       id: create
       if: ${{ steps.tag-push.outcome == env.OUTCOME_SUCCESS }}
-      run: gh release create ${{ needs.build.outputs.outputs.tag }} --generate-notes --repo ${{ env.INPUT_BUILD_CONFIG_REPOSITORY }}
+      run: gh release create ${{ needs.build.outputs.tag }} --generate-notes --repo ${{ env.INPUT_BUILD_CONFIG_REPOSITORY }}
       env:
         GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
