@@ -52,13 +52,14 @@ env:
   BOOLEAN_TRUE: 'true'
   BOOLEAN_FALSE: 'false'
 
-# The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. 
+# The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time.
 # For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
-# `concurrency.group` generates a concurrency group name from the workflow name and repository name. 
+# `concurrency.group` generates a concurrency group name from the workflow name and repository name.
 # The `||` operator is used to define fallback values.
-    # Only allow one workflow to run one at a time for a repo to keep things simple.
-    # There's not that much traffic so to queue workflows up is no big deal.
-    group: ${{ github.repository }}
+concurrency:
+  # Only allow one workflow to run one at a time for a repo to keep things simple.
+  # There's not that much traffic so to queue workflows up is no big deal.
+  group: ${{ github.repository }}
 
 jobs:
   # Build and test, outputs version info, coverage info using shared build workflow.
