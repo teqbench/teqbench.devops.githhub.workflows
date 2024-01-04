@@ -103,10 +103,11 @@ jobs:
     - name: Tag & Push Release
       id: tag-push
       if: ${{ needs.build.outputs.status == env.OUTCOME_SUCCESS }}
-      # git push origin ${{ needs.build.outputs.tag }}
+      # ${{ needs.build.outputs.version_commit_hash }}
       run: |
-        git tag -a ${{ needs.build.outputs.tag }} ${{ needs.build.outputs.version_commit_hash }} -m "Added tag ${{ needs.build.outputs.tag }}."
-
+        git tag -a ${{ needs.build.outputs.tag }} -m "Added tag ${{ needs.build.outputs.tag }}."
+        git push origin ${{ needs.build.outputs.tag }}
+        
     - name: Create Release With Generated Notes
       id: create
       if: ${{ steps.tag-push.outcome == env.OUTCOME_SUCCESS }}
