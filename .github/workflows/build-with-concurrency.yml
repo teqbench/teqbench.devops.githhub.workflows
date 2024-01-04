@@ -1,0 +1,91 @@
+name: .NET Build and Test Workflow WITH Concurrency Protection
+# TeqBench - Shared workflow to build and test a .NET repo WITH concurrency protection. Use case, to be called from another workflow that
+# DOES NOT have concurrency protection either at the workflow level or the job level.
+
+on:
+  workflow_call:
+    inputs:
+      repository:
+        description: "The respository to build and test."
+        type: string
+
+      repository_owner:
+        description: "The respository's owner, i.e. teqbench."
+        type: string
+
+      ci_type:
+        description: "CI type to perform; build-manual, build-ci, build-release, build-release-deploy. Default setting: 'build-ci'"
+        type: string
+
+      release_type:
+        description: "Release type to perform. Options MAJOR, MINOR, PATCH if CI type is build-release or build-release-deploy, BUILD if CI type is build-ci or build-manual."
+        type: string
+
+      coverage_lower_boundary_override:
+        description: "The lower coverage boundary (inclusive); a code coverage less than this value is a failing build, if code coverage is greater than or equal to (and all other required build steps are successful) build is passing. Must be less than or equal to the upper coverage boundary (75)."
+        type: number
+
+      project_source_folder:
+        description: "The folder the project to be packaged as NuGet package is located. Default setting: './src'"
+        type: string
+
+      badges_folder:
+        description: "The folder for the repo's badges. Default setting: './.badges'"
+        type: string
+
+      coverage_folder:
+        description: "The folder for the repo's coverage data and reports Default setting: './coverage'"
+        type: string
+
+    # NOTE: Job outputs are unicode strings, and cannot specify the type for workflow outputs. So,
+    # here, since returning job outputs, the return types are strings.
+    outputs:
+      status:
+        description: "Workflow status."
+        value: ${{ jobs.build.outputs.status }}
+      major:
+        description: "The major component of the version number."
+        value: ${{ jobs.build.outputs.major }}
+      minor:
+        description: "The minor component of the version number."
+        value: ${{ jobs.build.outputs.minor }}
+      patch:
+        description: "The patch component of the version number."
+        value: ${{ jobs.build.outputs.patch }}
+      build:
+        description: "The build component of the version number."
+        value: ${{ jobs.build.outputs.build }}
+      revision:
+        description: "The revision component of the version number."
+        value: ${{ jobs.build.outputs.revision }}
+      tag:
+        description: "The version number in 'vMajor.Minor.Build.Revision' format."
+        value: ${{ jobs.build.outputs.tag }}
+      version_commit_hash:
+        value: ${{ jobs.build.outputs.version_commit_hash }}
+
+# The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time.
+# For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
+# `concurrency.group` generates a concurrency group name from the workflow name and repository name.
+# The `||` operator is used to define fallback values.
+concurrency:
+    # Only allow one workflow to run one at a time for a repo to keep things simple.
+    # There's not that much traffic so to queue workflows up is no big deal.
+    group: ${{ github.repository }}
+
+jobs:
+    # Build and test, outputs version info, coverage info using shared build workflow.
+    build:
+      name: Build
+      uses: teqbench/teqbench.devops.githhub.workflows/.github/workflows/build.yml@main
+      secrets: inherit
+      with:
+        repository: ${{ inputs.repository }}
+        repository_owner: ${{ inputs.repository_owner }}
+        ci_type: ${{ inputs.ci_type }}
+        release_type: ${{ inputs.release_type }}
+        coverage_lower_boundary_override: ${{ inputs.coverage_lower_boundary_override }}
+        project_source_folder: ${{ inputs.project_source_folder }}
+        badges_folder: ${{ inputs.badges_folder }}
+        coverage_folder: ${{ inputs.coverage_folder }}
+  

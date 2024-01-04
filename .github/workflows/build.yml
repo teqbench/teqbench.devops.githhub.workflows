@@ -1,5 +1,6 @@
-name: Common .NET Build and Test Workflow
-# TeqBench - Shared workflow to build and test a .NET repo.
+name: .NET Build and Test Workflow WITHOUT Concurrency Protection
+# TeqBench - Shared workflow to build and test a .NET repo WITHOUT concurrency protection. Use case, to be called from another workflow that 
+# has concurrency protection either at the workflow level or the job level.
 
 on: 
   workflow_call:
@@ -118,13 +119,6 @@ env:
   GIT_STATUS_NOTHING_TO_COMMIT: 'nothing to commit'
   BOOLEAN_TRUE: 'true'
   BOOLEAN_FALSE: 'false'
-
-# The `concurrency` key ensures that only a single workflow in the same concurrency group will run at the same time. 
-# For more information, see "[AUTOTITLE](/actions/using-jobs/using-concurrency)."
-# `concurrency.group` generates a concurrency group name from the workflow name and repository name. 
-# The `||` operator is used to define fallback values.
-concurrency:
-    group: '${{ github.workflow }} @ ${{ github.repository || github.head_ref || github.ref }}'
 
 jobs:
   validate-ci-type:
