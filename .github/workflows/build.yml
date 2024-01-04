@@ -324,7 +324,7 @@ jobs:
       if: ${{ steps.update-coverage-badge.outcome == env.OUTCOME_SUCCESS }}
       run: echo '${{ steps.update-coverage-badge.outputs.svg }}' > '${{ env.INPUT_FILE_PATH_BADGE_COVERAGE }}'
     
-    - name: Is Coverage Acceptable
+    - name: Is Coverage Acceptable?
       id: is-coverage-acceptable
       if: ${{ fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE) }}
       run: exit 0
@@ -370,20 +370,21 @@ jobs:
       
     # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
     # when steps which committed changes to the version file and badge files ran succesffully.
+    # Even if the coverage is assessment step (i.e. is-coverage-acceptable) was not successful, do want to push changes
+    # to the version and badge files. 
     - name: Push Commits
       id: push-commits
-      # if: ${{ always() && ((steps.commit-files-changes.outcome == env.OUTCOME_SUCCESS) || (steps.commit-badge-files-changes.outcome == env.OUTCOME_SUCCESS)) }}
       if: ${{ always() && (steps.commit-files-changes.outcome == env.OUTCOME_SUCCESS) }}
       run: |
         git push
 
-    - name: Final Build Status
-      id: final-build-status
-      if: ${{ success() }}
-      run: exit 0
+    # If the coverage is assessment step (i.e. is-coverage-acceptable) was not successful OR the pushing of any commits failed, build is not successful.
+    - name: Is This Build Passing?
+      if: (steps.is-coverage-acceptable.outcome == env.OUTCOME_FAILURE) || (steps.push-commits.outcome == env.OUTCOME_FAILURE)
+      run: exit 1
       
     outputs:
-      status: ${{ ((steps.final-build-status.outcome == env.OUTCOME_SUCCESS) && (steps.is-coverage-acceptable.outcome == env.OUTCOME_SUCCESS) && (steps.push-commits.outcome == env.OUTCOME_SUCCESS)) && env.OUTCOME_SUCCESS || env.OUTCOME_FAILURE }}
+      status: success()
       major: ${{ steps.increment-version-number.outputs.major }}
       minor: ${{ steps.increment-version-number.outputs.minor }}
       patch: ${{ steps.increment-version-number.outputs.patch }}
