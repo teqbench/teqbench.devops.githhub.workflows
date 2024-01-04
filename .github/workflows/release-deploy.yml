@@ -104,6 +104,7 @@ jobs:
       id: tag-push
       if: ${{ needs.build.outputs.status == env.OUTCOME_SUCCESS }}
       run: |
+        git fetch --unshallow
         git tag -a ${{ needs.build.outputs.tag }} ${{ needs.build.outputs.version_commit_hash }} -m "Added tag ${{ needs.build.outputs.tag }}."
         git push origin ${{ needs.build.outputs.tag }}
         
