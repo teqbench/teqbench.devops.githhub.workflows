@@ -418,7 +418,7 @@ jobs:
       # git commit -m "Update repo badges."
       run: |
         git add ${{ env.INPUT_FOLDER_PATH_BADGES }}
-        git commit --amend
+        git commit --amend --no-edit
 
     # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
     # when steps which committed changes to the version file and badge files ran succesffully.
