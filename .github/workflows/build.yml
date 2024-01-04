@@ -377,8 +377,8 @@ jobs:
       run: |
         git push
 
-    # If the coverage is assessment step (i.e. is-coverage-acceptable) was not successful OR the pushing of any commits failed, build is not successful.
-    - name: Is This Build Passing?
+    # If the coverage is assessment step (i.e. is-coverage-acceptable) was not successful OR if the pushing of any commits was not successful, build fails.
+    - name: Fail This Build?
       if: (steps.is-coverage-acceptable.outcome != env.OUTCOME_SUCCESS) || (steps.push-commits.outcome != env.OUTCOME_SUCCESS)
       run: exit 1
       
