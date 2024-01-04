@@ -88,7 +88,8 @@ jobs:
       run: |
         git config --global user.name '${{ vars.ORG_DEVOPS_GIT_CONFIG_AUTHOR }}'
         git config --global user.email '${{ vars.ORG_DEVOPS_GIT_CONFIG_EMAIL }}' 
-
+        echo "needs.build.outputs.status = '${{ needs.build.outputs.status }}'"
+        
     - name: Checkout Repository
       uses: actions/checkout@v4
       with:
