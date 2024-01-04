@@ -113,7 +113,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
     
     # If the tag/push and create steps have any outcomes other that success, fail the release and prevent deployment.
-    - name: Cancel Worklow?
+    - name: Fail Release?
       if: ${{ steps.tag-push.outcome != env.OUTCOME_SUCCESS && steps.create.outcome != env.OUTCOME_SUCCESS }}
       run: |
         echo "The 'tag-push' and 'create' steps of the 'release' job are both required to have an outcome of '${{ env.OUTCOME_SUCCESS }}' for the release to be successful and the worklow to proceed."
