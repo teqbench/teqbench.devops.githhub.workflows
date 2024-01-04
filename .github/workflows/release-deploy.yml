@@ -91,12 +91,10 @@ jobs:
       run: |
         git config --global user.name '${{ vars.ORG_DEVOPS_GIT_CONFIG_AUTHOR }}'
         git config --global user.email '${{ vars.ORG_DEVOPS_GIT_CONFIG_EMAIL }}' 
-        echo 'needs.build.outputs.status == ${{ needs.build.outputs.status }}'
-        echo 'needs.build.outputs.tag == ${{ needs.build.outputs.tag }}'
 
     - name: Tag & Push Release
       id: tag-push
-      if: ${{ needs.build.outputs.outcome == env.OUTCOME_SUCCESS }}
+      if: ${{ needs.build.outputs.status == env.OUTCOME_SUCCESS }}
       run: |
         git tag -a ${{ needs.build.outputs.tag }} -m "Added tag ${{ needs.build.outputs.tag }}."
         git push origin ${{ needs.build.outputs.tag }}
