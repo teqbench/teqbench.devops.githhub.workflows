@@ -115,7 +115,6 @@ env:
   RELEASE_TYPE_OPTION_PATCH: 'PATCH'
   COVERAGE_UPPER_BOUNDARY: 75
   OUTCOME_SUCCESS: 'success'
-  OUTCOME_FAILURE: 'failure'
   GIT_STATUS_NOTHING_TO_COMMIT: 'nothing to commit'
   BOOLEAN_TRUE: 'true'
   BOOLEAN_FALSE: 'false'
@@ -380,7 +379,7 @@ jobs:
 
     # If the coverage is assessment step (i.e. is-coverage-acceptable) was not successful OR the pushing of any commits failed, build is not successful.
     - name: Is This Build Passing?
-      if: (steps.is-coverage-acceptable.outcome == env.OUTCOME_FAILURE) || (steps.push-commits.outcome == env.OUTCOME_FAILURE)
+      if: (steps.is-coverage-acceptable.outcome != env.OUTCOME_SUCCESS) || (steps.push-commits.outcome != env.OUTCOME_SUCCESS)
       run: exit 1
       
     outputs:
