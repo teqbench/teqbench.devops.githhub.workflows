@@ -145,13 +145,24 @@ jobs:
     needs: validate-ci-type
     steps:
     - name: Validate Release Type
+      # For CI Types CI_TYPE_OPTION_BUILD_RELEASE and CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY valid release types are:
       # RELEASE_TYPE_OPTION_MAJOR - Backwards-incompatible updates and/or bugfixes
       # RELEASE_TYPE_OPTION_MINOR - Backwards-compatible updates and bugfixes
       # RELEASE_TYPE_OPTION_PATCH - Backwards-compatible bugfixes - ONLY
-      if: ${{ ((env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_MAJOR || env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_MINOR || env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_PATCH)) || ((env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_MANUAL || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_CI) && (env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_build)) }}
+      # For CI Types CI_TYPE_OPTION_BUILD_CI and CI_TYPE_OPTION_BUILD_MANUAL valid release types are:
+      # RELEASE_TYPE_OPTION_BUILD
+      if: ${{ 
+        (
+          (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && 
+          (env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_MAJOR && env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_MINOR && env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_PATCH)
+        ) || 
+        (
+          (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_MANUAL || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_CI) && 
+          (env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_build)
+        ) }}
       run: |
         echo "Specified Release Type, '${{ env.INPUT_RELEASE_TYPE }}', is not valid for the supplied CI Type, '${{ env.INPUT_CI_TYPE }}'."
-        echo "Valid options are: ${{ env.RELEASE_TYPE_OPTION_MAJOR }}, ${{ env.RELEASE_TYPE_OPTION_MINOR }}, ${{ env.RELEASE_TYPE_OPTION_PATCH }} }} for CI types ${{ env.CI_TYPE_OPTION_BUILD_RELEASE }} and ${{ env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}, otherwise ${{ env.RELEASE_TYPE_OPTION_BUILD }} is valid for CI types ${{ env.CI_TYPE_OPTION_BUILD_MANUAL }} or ${{ env.CI_TYPE_OPTION_BUILD_CI }}"
+        echo "Valid options are: ${{ env.RELEASE_TYPE_OPTION_MAJOR }}, ${{ env.RELEASE_TYPE_OPTION_MINOR }}, ${{ env.RELEASE_TYPE_OPTION_PATCH }} for CI types ${{ env.CI_TYPE_OPTION_BUILD_RELEASE }} and ${{ env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}, otherwise ${{ env.RELEASE_TYPE_OPTION_BUILD }} is valid for CI types ${{ env.CI_TYPE_OPTION_BUILD_MANUAL }} or ${{ env.CI_TYPE_OPTION_BUILD_CI }}"
         echo "Exiting workflow."
         exit 1
       
