@@ -427,7 +427,8 @@ jobs:
     # #       })  
 
     outputs:
-      status: ${{ ((steps.build-status.outcome == env.OUTCOME_SUCCESS) && (steps.is-coverage-acceptable.outcome == env.OUTCOME_SUCCESS) && (steps.push-commits.outcome == env.OUTCOME_SUCCESS)) && env.OUTCOME_SUCCESS || env.OUTCOME_FAILURE }}
+      status: success()
+      outcome: ${{ ((steps.build-status.outcome == env.OUTCOME_SUCCESS) && (steps.is-coverage-acceptable.outcome == env.OUTCOME_SUCCESS) && (steps.push-commits.outcome == env.OUTCOME_SUCCESS)) && env.OUTCOME_SUCCESS || env.OUTCOME_FAILURE }}
       major: ${{ steps.increment-version-number.outputs.major }}
       minor: ${{ steps.increment-version-number.outputs.minor }}
       patch: ${{ steps.increment-version-number.outputs.patch }}
