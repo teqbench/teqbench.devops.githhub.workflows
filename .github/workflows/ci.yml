@@ -134,7 +134,12 @@ jobs:
       # CI_TYPE_OPTION_BUILD_MANUAL - PR merge is NOT required in order to perform build.
       # CI_TYPE_OPTION_BUILD_RELEASE - PR merge is TBD required in order to perform build.
       # CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY - PR merge is TBD required in order to perform build.
-      if: ${{ env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_CI && env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_MANUAL && env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE && env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
+      if: ${{ 
+        env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_CI && 
+        env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_MANUAL && 
+        env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE &&
+        env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY
+        }}
       run: |
         echo "Specified CI Type, '${{ env.INPUT_CI_TYPE }}', is not valid."
         echo "Valid options are: ${{ env.CI_TYPE_OPTION_BUILD_CI }}, ${{ env.CI_TYPE_OPTION_BUILD_MANUAL }}, ${{ env.CI_TYPE_OPTION_BUILD_RELEASE }}, ${{ env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}"
@@ -159,7 +164,7 @@ jobs:
         ) || 
         (
           (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_MANUAL || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_CI) && 
-          (env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_build)
+          (env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_BUILD)
         ) }}
       run: |
         echo "Specified Release Type, '${{ env.INPUT_RELEASE_TYPE }}', is not valid for the supplied CI Type, '${{ env.INPUT_CI_TYPE }}'."
