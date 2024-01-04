@@ -420,16 +420,23 @@ jobs:
         git commit -m "Update repo badges."
 
     # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
+    # when steps which committed changes to the version file and badge files ran succesffully.
+    - name: Push Build Commits
+      if: ${{ always() && ((steps.commit-version-file-changes.outcome == env.OUTCOME_SUCCESS) || (steps.commit-badge-files-changes.outcome == env.OUTCOME_SUCCESS)) }}
+      run: |
+        git push
+        
+    # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
     # when the CI type is CI_TYPE_OPTION_BUILD_RELEASE or CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY and
     # when steps which committed changes to the version file and badge files ran succesffully.
-    - name: Tag & Push Release/Deployment Commits
+    - name: Tag & Push Release
       id: tag-push-release-deployment-commits
       if: ${{ (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (steps.commit-version-file-changes.outcome == env.OUTCOME_SUCCESS && steps.commit-badge-files-changes.outcome == env.OUTCOME_SUCCESS) }}
       run: |
         git tag -a ${{ steps.increment-version-number.outputs.tag }} -m "Added tag ${{ steps.increment-version-number.outputs.tag }}, the specified CI type is '${{ env.INPUT_CI_TYPE }}'."
         git push origin ${{ steps.increment-version-number.outputs.tag }}
 
-    - name: Create Release & Generate Notes
+    - name: Create Release With Generated Notes
       id: create-release
       if: ${{ steps.tag-push-release-deployment-commits.outcome == env.OUTCOME_SUCCESS }}
       run: gh release create ${{ steps.increment-version-number.outputs.tag }} --generate-notes --repo ${{ env.INPUT_BUILD_CONFIG_REPOSITORY }}
@@ -460,13 +467,4 @@ jobs:
     #         owner: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_OWNER }}",
     #         repo: "${{ env.INPUT_BUILD_CONFIG_REPOSITORY_NAME }}",
     #         labels: ["Release-${{ steps.increment-version-number.outputs.tag }}"]
-    #       })
-            
-    # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
-    # when the CI type is CI_TYPE_OPTION_BUILD_CI or CI_TYPE_OPTION_BUILD_MANUAL and
-    # when steps which committed changes to the version file and badge files ran succesffully.
-    - name: Push Build Commits
-      if: ${{ always() && ((env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_CI) || (env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_MANUAL)) && ((steps.commit-version-file-changes.outcome == env.OUTCOME_SUCCESS) || (steps.commit-badge-files-changes.outcome == env.OUTCOME_SUCCESS)) }}
-      run: |
-        git push
-  
+    #       })  
