@@ -23,6 +23,11 @@ on:
         description: "CI type to perform; build-manual, build-ci, build-release, build-release-deploy. Default setting: 'build-ci'"
         type: string
         default: 'build-ci'
+      
+      release_type:
+        description: "Release type to perform; major, minor, patch. Default setting: 'build-ci'. Only applicable if CI type is build-release or build-release-deploy"
+        type: string
+        default: 'build'
 
       # resource_url:
       #   type: string
@@ -77,11 +82,12 @@ env:
   INPUT_FILE_PATH_BADGE_DEPLOY_DATE: '${{ inputs.badges_folder }}/deploy-date.svg'
   INPUT_FILE_PATH_BADGE_DEPLOY_VERSION: '${{ inputs.badges_folder }}/deploy-version.svg'
   INPUT_COVERAGE_LOWER_BOUNDARY_OVERRIDE: ${{ inputs.coverage_lower_boundary_override }}
+  INPUT_RELEASE_TYPE: ${{ inputs.release_type }}
 
   # Env vars without input var values.
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
   BUILD_CONFIG_NAME: 'Release'
-  BUILD_CONFIG_RELEASE_TYPE: 'BUILD'  
+  # BUILD_CONFIG_RELEASE_TYPE: 'BUILD'  
   BUILD_CONFIG_BRANCH: 'main'
   BADGE_TYPE_INFORMATION: 'INFORMATION'
   BADGE_TYPE_WARNING: 'WARNING'
@@ -101,6 +107,10 @@ env:
   CI_TYPE_OPTION_BUILD_MANUAL: 'build-manual'
   CI_TYPE_OPTION_BUILD_RELEASE: 'build-release'
   CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY: 'build-release-deploy'
+  RELEASE_TYPE_OPTION_MAJOR: 'MAJOR'
+  RELEASE_TYPE_OPTION_MINOR: 'MINOR'
+  RELEASE_TYPE_OPTION_BUILD: 'BUILD'
+  RELEASE_TYPE_OPTION_PATCH: 'PATCH'
   COVERAGE_UPPER_BOUNDARY: 75
   OUTCOME_SUCCESS: 'success'
   GIT_STATUS_NOTHING_TO_COMMIT: 'nothing to commit'
@@ -125,11 +135,26 @@ jobs:
       # CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY - PR merge is TBD required in order to perform build.
       if: ${{ env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_CI && env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_MANUAL && env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE && env.INPUT_CI_TYPE != env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}
       run: |
-        echo "Specified CI type is not valid."
+        echo "Specified CI Type, '${{ env.INPUT_CI_TYPE }}', is not valid."
         echo "Valid options are: ${{ env.CI_TYPE_OPTION_BUILD_CI }}, ${{ env.CI_TYPE_OPTION_BUILD_MANUAL }}, ${{ env.CI_TYPE_OPTION_BUILD_RELEASE }}, ${{ env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}"
         echo "Exiting workflow."
         exit 1
 
+  validate-release-type:
+    runs-on: ubuntu-latest
+    needs: validate-ci-type
+    steps:
+    - name: Validate Release Type
+      # RELEASE_TYPE_OPTION_MAJOR - Backwards-incompatible updates and/or bugfixes
+      # RELEASE_TYPE_OPTION_MINOR - Backwards-compatible updates and bugfixes
+      # RELEASE_TYPE_OPTION_PATCH - Backwards-compatible bugfixes - ONLY
+      if: ${{ ((env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY) && (env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_MAJOR || env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_MINOR || env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_PATCH)) || ((env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_MANUAL || env.INPUT_CI_TYPE == env.CI_TYPE_OPTION_BUILD_CI) && (env.INPUT_RELEASE_TYPE != env.RELEASE_TYPE_OPTION_build)) }}
+      run: |
+        echo "Specified Release Type, '${{ env.INPUT_RELEASE_TYPE }}', is not valid for the supplied CI Type, '${{ env.INPUT_CI_TYPE }}'."
+        echo "Valid options are: ${{ env.RELEASE_TYPE_OPTION_MAJOR }}, ${{ env.RELEASE_TYPE_OPTION_MINOR }}, ${{ env.RELEASE_TYPE_OPTION_PATCH }} }} for CI types ${{ env.CI_TYPE_OPTION_BUILD_RELEASE }} and ${{ env.CI_TYPE_OPTION_BUILD_RELEASE_DEPLOY }}, otherwise ${{ env.RELEASE_TYPE_OPTION_BUILD }} is valid for CI types ${{ env.CI_TYPE_OPTION_BUILD_MANUAL }} or ${{ env.CI_TYPE_OPTION_BUILD_CI }}"
+        echo "Exiting workflow."
+        exit 1
+      
   validate-merge:
     runs-on: ubuntu-latest
     needs: validate-ci-type
@@ -152,9 +177,7 @@ jobs:
     outputs:
       COVERAGE_LOWER_BOUNDARY_OVERRIDE: ${{ steps.validate-lower-coverage-boundary-override.outputs.value }}
 
-
   build:
-    # needs: merge_check
     runs-on: ubuntu-latest
     needs: [validate-ci-type, validate-variables, validate-merge]
 
@@ -197,8 +220,7 @@ jobs:
       id: increment-version-number
       uses: teqbench/teqbench.devops.githhub.actions.version-updater@v14
       with:
-        # By specifying a release type of "BUILD", only the build number will be incremented.
-        release-type: ${{ env.BUILD_CONFIG_RELEASE_TYPE }}
+        release-type: ${{ env.INPUT_RELEASE_TYPE }}
         version-json: ${{ steps.get-version-json.outputs.version-json }}
 
     # Always update the version file with new build number, even if build fails, and if the increment build number step was successful.
