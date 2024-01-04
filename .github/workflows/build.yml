@@ -298,7 +298,7 @@ jobs:
       run: |
         git add ${{ env.INPUT_FILE_PATH_VERSION }}
         git commit -m "Update to version ${{ steps.increment-version-number.outputs.version }}"
-        echo "hash=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+        echo "hash=$(git rev-parse --verify)" >> $GITHUB_OUTPUT
 
     - name: Restore .NET Project Dependencies
       run: dotnet restore
