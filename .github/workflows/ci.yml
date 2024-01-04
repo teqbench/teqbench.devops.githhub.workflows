@@ -69,25 +69,25 @@ on:
     outputs:
       status:
         description: 'Workflow status.'
-        value: ${{ jobs.create-release.outputs.status }}
+        value: ${{ jobs.build.outputs.status }}
       major:
         description: 'The major component of the version number.'
-        value: ${{ jobs.create-release.outputs.major }}
+        value: ${{ jobs.build.outputs.major }}
       minor:
         description: 'The minor component of the version number.'
-        value: ${{ jobs.create-release.outputs.minor }}
+        value: ${{ jobs.build.outputs.minor }}
       patch:
         description: 'The patch component of the version number.'
-        value: ${{ jobs.create-release.outputs.patch }}
+        value: ${{ jobs.build.outputs.patch }}
       build:
         description: 'The build component of the version number.'
-        value: ${{ jobs.create-release.outputs.build }}
+        value: ${{ jobs.build.outputs.build }}
       revision:
         description: 'The revision component of the version number.'
-        value: ${{ jobs.create-release.outputs.revision }}
+        value: ${{ jobs.build.outputs.revision }}
       release_tag:
         description: "The version number in 'vMajor.Minor.Build.Revision' format."
-        value: ${{ jobs.create-release.outputs.release_tag }}
+        value: ${{ jobs.build.outputs.release_tag }}
         
 env:
   # Env vars based on input values
