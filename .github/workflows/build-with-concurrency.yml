@@ -1,4 +1,5 @@
-name: .NET Build and Test Workflow WITH Concurrency Protection
+name: Shared Build With Concurrency Workflow
+# .NET Build and Test Workflow WITH Concurrency Protection
 # TeqBench - Shared workflow to build and test a .NET repo WITH concurrency protection. Use case, to be called from another workflow that
 # DOES NOT have concurrency protection either at the workflow level or the job level.
 
@@ -84,7 +85,7 @@ concurrency:
 jobs:
     # Build and test, outputs version info, coverage info using shared build workflow.
     build:
-      name: Build
+      name: Build With Concurrency Job
       uses: teqbench/teqbench.devops.githhub.workflows/.github/workflows/build.yml@main
       secrets: inherit
       with:
