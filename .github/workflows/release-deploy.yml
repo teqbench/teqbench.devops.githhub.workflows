@@ -1,4 +1,4 @@
-name: Create Release & Deploy Workflow WITH Concurrency Protection
+name: Shared Release & Deploy Workflow
 
 on: 
   workflow_call:
@@ -65,7 +65,7 @@ concurrency:
 jobs:
   # Build and test, outputs version info, coverage info using shared build workflow.
   build:
-    name: Build
+    name: Build Job
     uses: teqbench/teqbench.devops.githhub.workflows/.github/workflows/build.yml@main
     secrets: inherit
     with:
@@ -80,7 +80,7 @@ jobs:
 
   # Creates release based on the build.
   release:
-    name: Release
+    name: Release Job
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -124,7 +124,7 @@ jobs:
 
   # Creates deployment based on release.
   deploy:
-    name: Deploy
+    name: Deploy Job
     runs-on: ubuntu-latest
     needs: [build, release]
     env:
