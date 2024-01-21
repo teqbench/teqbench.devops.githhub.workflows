@@ -46,6 +46,11 @@ on:
         type: string
         default: './.coverage'
 
+      bypass_tests:
+        description: "Option to bypass/skip the unit test step. Only should be used if repo does NOT contact test as often is case with experimental/sandbox/POC codebases."
+        type: boolean
+        default: false
+
     # NOTE: Job outputs are unicode strings, and cannot specify the type for workflow outputs. So,
     # here, since returning job outputs, the return types are strings.
     outputs:
@@ -91,7 +96,8 @@ env:
   INPUT_FILE_PATH_BADGE_DEPLOY_VERSION: '${{ inputs.badges_folder }}/deploy-version.svg'
   INPUT_COVERAGE_LOWER_BOUNDARY_OVERRIDE: ${{ inputs.coverage_lower_boundary_override }}
   INPUT_RELEASE_TYPE: ${{ inputs.release_type }}
-
+  INPUT_BYPASS_TESTS: ${{ inputs.bypass_tests }}
+  
   # Env vars without input var values.
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
   BUILD_CONFIG_NAME: 'Release'
@@ -264,6 +270,7 @@ jobs:
     # Only run unit tests if all prior steps, including the Build Solution step, were successful.
     - name: Run Unit Tests
       id: run-unit-tests
+      if: ${{ env.INPUT_BYPASS_TESTS != env.BOOLEAN_TRUE }}
       run: dotnet test --no-restore
 
     - name: Create Badges Directory If Does Not Exist
@@ -326,7 +333,7 @@ jobs:
     
     - name: Is Coverage Acceptable?
       id: is-coverage-acceptable
-      if: ${{ fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE) }}
+      if: ${{ (env.INPUT_BYPASS_TESTS == env.BOOLEAN_TRUE) || (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE)) }}
       run: exit 0
 
     # Cannot eval success() outside of if statement, so use build-status step to get overall build status to 
@@ -370,7 +377,7 @@ jobs:
       
     # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
     # when steps which committed changes to the version file and badge files ran succesffully.
-    # Even if the coverage is assessment step (i.e. is-coverage-acceptable) was not successful, do want to push changes
+    # Even if the coverage assessment step (i.e. is-coverage-acceptable) was not successful, do want to push changes
     # to the version and badge files. 
     - name: Push Commits
       id: push-commits
