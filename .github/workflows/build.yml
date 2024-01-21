@@ -48,8 +48,8 @@ on:
 
       bypass_tests:
         description: "Option to bypass/skip the unit test step. Only should be used if repo does NOT contact test as often is case with experimental/sandbox/POC codebases."
-        type: boolean
-        default: false
+        type: string
+        default: 'false'
 
     # NOTE: Job outputs are unicode strings, and cannot specify the type for workflow outputs. So,
     # here, since returning job outputs, the return types are strings.
@@ -270,7 +270,7 @@ jobs:
     # Only run unit tests if all prior steps, including the Build Solution step, were successful.
     - name: Run Unit Tests
       id: run-unit-tests
-      if: ${{ env.INPUT_BYPASS_TESTS }}
+      if: ${{ env.INPUT_BYPASS_TESTS == env.BOOLEAN_TRUE }}
       run: dotnet test --no-restore
 
     - name: Create Badges Directory If Does Not Exist
