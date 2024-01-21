@@ -48,7 +48,7 @@ on:
 
       bypass_tests:
         description: "Option to bypass/skip the unit test step. Only should be used if repo does NOT contact test as often is case with experimental/sandbox/POC codebases."
-        type: string
+        type: boolean
         default: false
 
     # NOTE: Job outputs are unicode strings, and cannot specify the type for workflow outputs. So,
