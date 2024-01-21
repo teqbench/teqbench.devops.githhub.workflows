@@ -46,10 +46,10 @@ on:
         type: string
         default: './.coverage'
 
-      bypass_tests:
-        description: "Option to bypass/skip the unit test step. Only should be used if repo does NOT contact test as often is case with experimental/sandbox/POC codebases."
-        type: string
-        default: 'false'
+      # bypass_tests:
+      #   description: "Option to bypass/skip the unit test step. Only should be used if repo does NOT contact test as often is case with experimental/sandbox/POC codebases."
+      #   type: string
+      #   default: 'false'
         
     # NOTE: Job outputs are unicode strings, and cannot specify the type for workflow outputs. So,
     # here, since returning job outputs, the return types are strings.
@@ -102,5 +102,5 @@ jobs:
         project_source_folder: ${{ inputs.project_source_folder }}
         badges_folder: ${{ inputs.badges_folder }}
         coverage_folder: ${{ inputs.coverage_folder }}
-        bypass_tests: ${{ inputs.bypass_tests }}
+        # bypass_tests: ${{ inputs.bypass_tests }}
   
