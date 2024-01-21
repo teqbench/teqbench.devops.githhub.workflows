@@ -270,7 +270,7 @@ jobs:
     # Only run unit tests if all prior steps, including the Build Solution step, were successful.
     - name: Run Unit Tests
       id: run-unit-tests
-      if: ${{ env.INPUT_BYPASS_TESTS == env.BOOLEAN_TRUE }}
+      if: ${{ env.INPUT_BYPASS_TESTS != env.BOOLEAN_TRUE }}
       run: dotnet test --no-restore
 
     - name: Create Badges Directory If Does Not Exist
