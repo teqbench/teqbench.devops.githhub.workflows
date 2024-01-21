@@ -270,7 +270,7 @@ jobs:
     # Only run unit tests if all prior steps, including the Build Solution step, were successful.
     - name: Run Unit Tests
       id: run-unit-tests
-      if: ${{ env.INPUT_BYPASS_TESTS }}
+      if: ${{ env.INPUT_BYPASS_TESTS == env.BOOLEAN_TRUE }}
       run: dotnet test --no-restore
 
     - name: Create Badges Directory If Does Not Exist
@@ -333,7 +333,7 @@ jobs:
     
     - name: Is Coverage Acceptable?
       id: is-coverage-acceptable
-      if: ${{ env.INPUT_BYPASS_TESTS || (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE)) }}
+      if: ${{ (env.INPUT_BYPASS_TESTS == env.BOOLEAN_TRUE) || (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE)) }}
       run: exit 0
 
     # Cannot eval success() outside of if statement, so use build-status step to get overall build status to 
