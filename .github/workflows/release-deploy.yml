@@ -38,12 +38,25 @@ on:
         type: string
         default: './.coverage'
 
+      bypass_tests:
+        description: "Option to bypass/skip the unit test step. Only should be used if repo does NOT contact test as often is case with experimental/sandbox/POC codebases."
+        type: boolean
+        default: false
+  
+      deploy:
+        description: "Option to deploy. Only should be used if repo should not be deployed as in case of experimental/sandbox/POC codebases."
+        type: boolean
+        default: true        
+
 env:
   # Env vars based on input values
+  # NOTE: When assign to 'env' context variables, values are assigned as strings, and as such, when evaluating the variable
+  # need to evaluate as a string or covert to appropriate type (i.e. to a number). If boolean, can compare to 'true' or 'false' 
+  # strings, i.e. env.boolean_string_variable == 'true' as opposed to inputs.boolean_variable (which is a boolean)
   INPUT_BUILD_CONFIG_REPOSITORY: ${{ inputs.repository }}
   INPUT_BUILD_CONFIG_REPOSITORY_OWNER: ${{ inputs.repository_owner }}
   INPUT_FOLDER_PATH_SOURCE: ${{ inputs.project_source_folder }}    
-
+  
   # Env vars without input var values.
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
   BUILD_CONFIG_NAME: 'Release'
@@ -77,7 +90,8 @@ jobs:
       project_source_folder: ${{ inputs.project_source_folder }}
       badges_folder: ${{ inputs.badges_folder }}
       coverage_folder: ${{ inputs.coverage_folder }}
-
+      bypass_tests: ${{ inputs.bypass_tests }}
+      
   # Creates release based on the build.
   release:
     name: Release Job
@@ -121,12 +135,17 @@ jobs:
         echo "steps.create.outcome == '${{ steps.create.outcome }}'
         echo "Fail job."
         exit 1
-
+        
   # Creates deployment based on release.
-  deploy:
+  deploy:    
     name: Deploy Job
     runs-on: ubuntu-latest
     needs: [build, release]
+    # 'env' context is not available to jobs.<job id>.if, so use 'inputs' context which is availabe to jobs.<job id>.if
+    # see https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability 
+    # Also, note, since evaluating the input variable, it's still a boolean whereas when assign to an environment 
+    # variable context, it's converted to a string and have to evaluate as a string.
+    if: ${{ inputs.deploy }}
     env:
       # This environment variable is implicitly required by the Setup .NET step
       NUGET_AUTH_TOKEN: ${{secrets.DEVOPS_PACKAGE_PUBLISHER_TOKEN}}

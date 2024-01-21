@@ -80,6 +80,9 @@ on:
         
 env:
   # Env vars based on input values
+  # NOTE: When assign to 'env' context variables, values are assigned as strings, and as such, when evaluating the variable
+  # need to evaluate as a string or covert to appropriate type (i.e. to a number). If boolean, can compare to 'true' or 'false' 
+  # strings, i.e. env.boolean_string_variable == 'true' as opposed to inputs.boolean_variable (which is a boolean)
   INPUT_CI_TYPE: ${{ inputs.ci_type }}
   INPUT_BUILD_CONFIG_REPOSITORY: ${{ inputs.repository }}
   INPUT_BUILD_CONFIG_REPOSITORY_OWNER: ${{ inputs.repository_owner }}
