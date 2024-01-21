@@ -135,15 +135,6 @@ jobs:
         echo "steps.create.outcome == '${{ steps.create.outcome }}'
         echo "Fail job."
         exit 1
-
-  # validate_deploy:
-  #   name: Validate Deploy Variable
-  #   runs-on: ubuntu-latest
-  #   needs: [build, release]
-  #   steps:
-  #   - name: What is var
-  #     run: |
-  #       echo "inputs.deploy ${{ fromJSON(inputs.deploy) }}"
         
   # Creates deployment based on release.
   deploy:    
@@ -153,7 +144,7 @@ jobs:
     # 'env' context is not available to jobs.<job id>.if, so use 'inputs' context which is availabe to jobs.<job id>.if
     # see https://docs.github.com/en/actions/learn-github-actions/contexts#context-availability 
     # Also, note, since evaluating the input variable, it's still a boolean whereas when assign to an environment 
-    # variable, it's converted to a string and have to evaluate as a string.
+    # variable context, it's converted to a string and have to evaluate as a string.
     if: ${{ inputs.deploy }}
     env:
       # This environment variable is implicitly required by the Setup .NET step
