@@ -333,7 +333,7 @@ jobs:
     
     - name: Is Coverage Acceptable?
       id: is-coverage-acceptable
-      if: ${{ fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE) }}
+      if: ${{ (env.INPUT_BYPASS_TESTS == env.BOOLEAN_TRUE) || (fromJSON(steps.get-coverage-value.outputs.coverage) >= fromJSON(needs.validate-variables.outputs.COVERAGE_LOWER_BOUNDARY_OVERRIDE)) }}
       run: exit 0
 
     # Cannot eval success() outside of if statement, so use build-status step to get overall build status to 
@@ -377,7 +377,7 @@ jobs:
       
     # ONLY tag and push commits when all prior steps (which were not skipped) ran succesfully and 
     # when steps which committed changes to the version file and badge files ran succesffully.
-    # Even if the coverage is assessment step (i.e. is-coverage-acceptable) was not successful, do want to push changes
+    # Even if the coverage assessment step (i.e. is-coverage-acceptable) was not successful, do want to push changes
     # to the version and badge files. 
     - name: Push Commits
       id: push-commits
