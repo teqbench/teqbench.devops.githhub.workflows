@@ -46,6 +46,11 @@ on:
         type: string
         default: './.coverage'
 
+      bypass_tests:
+        description: "Option to bypass/skip the unit test step. Only should be used if repo does NOT contact test as often is case with experimental/sandbox/POC codebases."
+        type: string
+        default: false
+
     # NOTE: Job outputs are unicode strings, and cannot specify the type for workflow outputs. So,
     # here, since returning job outputs, the return types are strings.
     outputs:
@@ -91,7 +96,8 @@ env:
   INPUT_FILE_PATH_BADGE_DEPLOY_VERSION: '${{ inputs.badges_folder }}/deploy-version.svg'
   INPUT_COVERAGE_LOWER_BOUNDARY_OVERRIDE: ${{ inputs.coverage_lower_boundary_override }}
   INPUT_RELEASE_TYPE: ${{ inputs.release_type }}
-
+  INPUT_BYPASS_TESTS: ${{ inputs.bypass_tests }}
+  
   # Env vars without input var values.
   BUILD_CONFIG_DOTNET_VERSION: '8.0.X'
   BUILD_CONFIG_NAME: 'Release'
@@ -264,6 +270,7 @@ jobs:
     # Only run unit tests if all prior steps, including the Build Solution step, were successful.
     - name: Run Unit Tests
       id: run-unit-tests
+      if: ${{ env.INPUT_BYPASS_TESTS }}
       run: dotnet test --no-restore
 
     - name: Create Badges Directory If Does Not Exist
