@@ -159,7 +159,7 @@ jobs:
         token: ${{ secrets.DEVOPS_ACTIONS_PAT_TOKEN }}
 
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.BUILD_CONFIG_DOTNET_VERSION }}
         source-url: https://nuget.pkg.github.com/${{ env.INPUT_BUILD_CONFIG_REPOSITORY_OWNER }}/index.json
